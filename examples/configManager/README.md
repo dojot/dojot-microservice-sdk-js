@@ -16,5 +16,5 @@ docker-compose up
 ## Overview
 
 This example utilizes VerneMQ to demonstrate the capabilities of the ConfigManager. The
-[index.js](./index.js) file implements a simple MQTT client that connects to VerneMQ and publish
+[index.js](./index.js) file implements a simple MQTT client that connects to VerneMQ and publishes
 messages in it. The same messages are retrieved via subscription.

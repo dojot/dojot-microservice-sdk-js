@@ -298,12 +298,20 @@ development.conf
 load-testing.conf
 ```
 
-As for the parameters, their format is:
+As for the parameters, their format are:
 ```
 scope1.param.key=value
 scope1.param.another.key=value
 scope2.param.key=value
 ```
+
+Also, you can write comments by beginning a line with #:
+```
+# This is a comment. Only entire line comments are supported.
+app.hostname=v2k-bridge # This is not a comment, it will be in the parameter value
+```
+You can also separate the configuration in blocks using blank lines, as these are removed just like
+commented lines.
 
 Examples:
 ```
@@ -319,13 +327,14 @@ This file is very similar to the previous one. The differences are:
 - It should be named `default.conf`
 - It should be in a directory named `config` in the project root
 - It accepts types for variables
+- It accepts comments too
 
 ##### Types
 
 To remove the burden of treating variables' types in the service code, this module provides an easy
 way of handling them. Examples of variables and types:
 ```
-scope1.param.boolean.key:boolean=trUe
+scope1.param.boolean.key:boolean=true
 scope1.param.float.key:float=3.1415
 scope1.param.integer.key:integer=10
 scope1.param.string.array.key:string[]=["stringA", 'stringB']
@@ -397,7 +406,7 @@ This file will create the following object when `ConfigManager.getConfig` is cal
 ```
 
 __NOTE THAT__ the {SCOPE} part is always the name of a configuration object.
-__NOTE THAT__ the object have always a depth of one, thus you should access the dotted ones like
+__NOTE THAT__ the object has always a depth of one, thus you should access the dotted ones like
 this:
 ```js
 obj.class2['param4.key1']

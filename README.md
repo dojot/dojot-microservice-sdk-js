@@ -1,6 +1,6 @@
-# microservice-sdk
+# Microservice SDK [![DeepScan grade](https://deepscan.io/api/teams/2690/projects/13298/branches/219450/badge/grade.svg)](https://deepscan.io/dashboard#view=project&tid=2690&pid=13298&bid=219450) [![CodeFactor](https://www.codefactor.io/repository/github/dojot/dojot-microservice-sdk-js/badge)](https://www.codefactor.io/repository/github/dojot/dojot-microservice-sdk-js) [![codecov](https://codecov.io/gh/dojot/dojot-microservice-sdk-js/branch/master/graph/badge.svg)](https://codecov.io/gh/dojot/dojot-microservice-sdk-js)
 
-This nodejs module aims to help developers to build microservices in the dojot's context.
+This NodeJS module aims to help developers to build microservices in the dojot's context.
 It gives utility features that most of the dojot microservices needs to implement.
 
 __NOTE THAT__ this module does not intend to be a generic microservice SDK, but a

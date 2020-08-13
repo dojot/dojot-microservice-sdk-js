@@ -1,4 +1,6 @@
 name: Publish Node.js packages to npmjs.com and GitHub packages
+# The version in package.json must match the tag that triggered the workflow.
+# For example, version in package.json is 0.1.12 and the tag that triggered must be v0.1.12.
 on:
     push:
         tags:

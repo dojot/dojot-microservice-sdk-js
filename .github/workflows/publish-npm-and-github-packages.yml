@@ -1,0 +1,58 @@
+name: Publish Node.js packages to npmjs.com and GitHub packages
+on:
+    push:
+        tags:
+            - v*.*.*
+jobs:
+
+    check:
+        runs-on: ubuntu-latest
+        steps:
+        - name: checkout
+          uses: actions/checkout@v2
+        - name: Check if version has been updated
+          id: versioncheck
+          uses: EndBug/version-check@v1
+          with:
+            diff-search: true
+            token: ${{ secrets.GITHUB_TOKEN }}
+        - name: Checks if the package version has changed
+          if: steps.versioncheck.outputs.changed != 'true'
+          run: 'echo "No version change " && exit 1'
+        - name: Checks whether the tag is the same as the version ignoring the begin
+          if: endsWith(github.ref, steps.versioncheck.outputs.version) != true
+          run: 'echo "Tag is different from the new version" && exit 1'
+
+    publish:
+        needs: check
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                node-version: [10.x]
+        steps:
+        - name: checkout
+          uses: actions/checkout@v2
+        - name: npm install, build, and test
+          run: |
+            npm ci
+            npm run build --if-present
+            npm run lint
+            npm test
+        - name: Set registry to npmjs.com
+          uses: actions/setup-node@v1
+          with:
+            node-version: '10.x'
+            registry-url: 'https://registry.npmjs.org'
+        - name: Publish to npmjs.com
+          run: npm publish --access public
+          env:
+            NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        - name: Set registry to GitHub Packages
+          uses: actions/setup-node@v1
+          with:
+            node-version: '10.x'
+            registry-url: 'https://npm.pkg.github.com'
+        - name: Publish to GitHub Packages
+          run: npm publish
+          env:
+            NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

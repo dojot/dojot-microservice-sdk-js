@@ -9,7 +9,9 @@ file based on:
 This is, also, the precedence for the configuration, from higher to lower priority. The following
 image summarizes the module flow:
 
-![Configuration Manager flow](../../docs/images/Configuration Manager Flow.png)
+<p align="center">
+<img src="../../docs/images/ConfigManagerFlow.png" alt="Configuration Manager Flow">
+</p>
 
 # Patterns
 

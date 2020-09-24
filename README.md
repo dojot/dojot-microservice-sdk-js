@@ -9,11 +9,11 @@ attend the dojot microservices necessities.
 # Table of Contents
 
 - Modules
-  - [Configuration Manager](./lib/configManager/README.md)
-  - [Kafka Handlers](./lib/kafka/README.md)
-  - [Logger](./lib/logging/README.md)
+  - [Configuration Manager](https://github.com/dojot/dojot-microservice-sdk-js/blob/master/lib/configManager/README.md)
+  - [Kafka Handlers](https://github.com/dojot/dojot-microservice-sdk-js/blob/master/lib/kafka/README.md)
+  - [Logger](https://github.com/dojot/dojot-microservice-sdk-js/blob/master/lib/logging/README.md)
 - Examples
-  - [Configuration Manager](./examples/configManager/README.md)
-  - [Kafka's Consumer](./examples/consumer/README.md)
-  - [Kafka's Producer](./examples/producer/README.md)
-  - [Logger](./examples/logging/README.md)
+  - [Configuration Manager](https://github.com/dojot/dojot-microservice-sdk-js/blob/master/examples/configManager/README.md)
+  - [Kafka's Consumer](https://github.com/dojot/dojot-microservice-sdk-js/blob/master/examples/consumer/README.md)
+  - [Kafka's Producer](https://github.com/dojot/dojot-microservice-sdk-js/blob/master/examples/producer/README.md)
+  - [Logger](https://github.com/dojot/dojot-microservice-sdk-js/blob/master/examples/logging/README.md)

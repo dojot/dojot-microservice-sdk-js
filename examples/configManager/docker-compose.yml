@@ -2,7 +2,7 @@ version: '3.3'
 services:
 
   vernemq:
-    image: vernemq/vernemq
+    image: vernemq/vernemq:1.10.0
     restart: always
     environment:
       DOCKER_VERNEMQ_ACCEPT_EULA: 'yes'

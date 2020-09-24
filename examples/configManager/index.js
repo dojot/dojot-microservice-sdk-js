@@ -16,7 +16,7 @@ const config = ConfigManager.getConfig('CONFEXAMPLE');
 const mqttConfig = ConfigManager.transformObjectKeys(config.mqtt, camelCase);
 
 logger.info(config);
-logger.info('Tranformed MQTT config:');
+logger.info('Transformed MQTT config:');
 logger.info(mqttConfig);
 
 logger.info('Waiting VerneMQ to be connected...');

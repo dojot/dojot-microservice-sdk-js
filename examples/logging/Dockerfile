@@ -1,4 +1,4 @@
-FROM node:10.16.3-alpine AS base
+FROM node:12.18.4-alpine AS base
 
 WORKDIR /opt/example
 
@@ -29,7 +29,7 @@ RUN npm install
 
 COPY examples/logging/*.js ./
 
-FROM node:10.16.3-alpine
+FROM node:12.18.4-alpine
 
 WORKDIR /opt/example
 

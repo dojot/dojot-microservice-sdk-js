@@ -1,0 +1,23 @@
+{
+  "name": "servicestatemanager",
+  "version": "1.0.0",
+  "description": "An example usage of ServiceStateManager",
+  "main": "app/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "example",
+    "health",
+    "check",
+    "graceful",
+    "shutdown"
+  ],
+  "author": "Eduardo Garcia Misiuk",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "@dojot/microservice-sdk": "file:./microservice-sdk-pkg",
+    "express": "^4.17.1",
+    "superagent": "^6.1.0"
+  }
+}

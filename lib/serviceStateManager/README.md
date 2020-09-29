@@ -34,12 +34,11 @@ to use them.
 ## **Worker Thread**
 
 A separate thread to treat all the health checkers that should not interfere in the main thread's
-event loop. This thread is automatically created when the `ServiceStateManager` class is
-**initialized**.
+event loop. This thread is created when the `ServiceStateManager` class is initialized and you've
+**enabled it via configuration**.
 
 __ATTENTION__: the worker thread code should be in a separate file from the master thread code.
-Check the [configuration section](#configuration) for more details on how to point to the worker
-file.
+Check the [configuration section](#configuration) for more details on its configuration.
 
 Inside its file, you should register functions in the `HealthCheckerWorker` via the
 `addHealthChecker` function. It will create a node.js `Interval` to periodically call the passed
@@ -78,9 +77,11 @@ __NOTE THAT__ we do not use the ConfigManager in this module, since we don't wan
 environment variables inside the SDK modules, we only follow its naming patterns for configuration
 variables.
 
-| Name        | Description              | Default value         | Accepted values
-| ----------- | ------------------------ | --------------------- | ---------------
-| worker.file | The worker file location | healthcheck/Worker.js | path
+| Name          | Description                             | Default value         | Accepted values
+| ------------- | --------------------------------------- | --------------------- | ---------------
+| worker.enable | Whether to use the worker thread or not | false                 | boolean
+| worker.file   | The worker file location                | healthcheck/Worker.js | path
+
 
 ## **Configuration object format**
 

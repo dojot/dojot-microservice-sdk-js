@@ -9,7 +9,6 @@
  */
 const express = require('express');
 const superagent = require('superagent');
-const util = require('util');
 
 const { ServiceStateManager, Logger } = require('@dojot/microservice-sdk');
 
@@ -61,10 +60,10 @@ const main = () => {
     superagent
       .get('localhost:9000/health')
       .send()
-      .then((res) => {
+      .then(() => {
         logger.info('The server is ready!');
       })
-      .catch((reason) => {
+      .catch(() => {
         logger.warn('The server is not ready!');
       });
   }, 1000);

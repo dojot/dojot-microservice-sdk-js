@@ -161,7 +161,6 @@ describe('clearHealthChecker', () => {
   });
 
   it('should not clear a health checker - not registered', (done) => {
-
     const worker = new HealthCheckerWorker();
 
     expect(() => worker.clearHealthChecker(service)).toThrowError(

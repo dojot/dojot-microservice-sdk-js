@@ -225,7 +225,6 @@ describe('updateState', () => {
       expect(() => manager.updateState({ db: true })).toThrowError('Service is not registered');
     });
   });
-
 });
 
 describe('signalReady', () => {

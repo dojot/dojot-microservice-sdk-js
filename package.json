@@ -8,6 +8,7 @@
   },
   "scripts": {
     "test": "jest",
+    "test:watch": "jest --watchAll",
     "lint": "eslint --ext .js .",
     "lint:fix": "eslint --fix --ext .js ."
   },

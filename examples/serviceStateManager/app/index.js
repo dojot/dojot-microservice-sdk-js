@@ -29,7 +29,7 @@ const main = () => {
    * Initializing the manager, it stores the status of each service and provides the endpoints. This
    * should be instantiated in your application
    */
-  const stateManager = new ServiceStateManager.ServiceStateManager(
+  const stateManager = new ServiceStateManager.Manager(
     ['server'],
     {
       module: {

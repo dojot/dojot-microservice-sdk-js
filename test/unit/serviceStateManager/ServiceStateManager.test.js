@@ -1,4 +1,4 @@
-const { ServiceStateManager: { ServiceStateManager } } = require('../../../index');
+const { ServiceStateManager: { Manager } } = require('../../../index');
 
 const mockWorker = {
   on: jest.fn(),
@@ -39,7 +39,7 @@ jest.mock('lightship', () => ({
 
 describe('constructor', () => {
   it('should instantiate correctly - without worker threads', () => {
-    const manager = new ServiceStateManager(['server']);
+    const manager = new Manager(['server']);
 
     expect(manager.lightship).toBeDefined();
     expect(manager.createBeacon).toBeDefined();
@@ -52,7 +52,7 @@ describe('constructor', () => {
   });
 
   it('should instantiate correctly - with worker threads', () => {
-    const manager = new ServiceStateManager(['server'], { module: { 'worker.enable': true } });
+    const manager = new Manager(['server'], { module: { 'worker.enable': true } });
     manager.registerShutdownHandler = jest.fn();
 
     expect(manager.lightship).toBeDefined();
@@ -69,7 +69,7 @@ describe('initWorker', () => {
   let manager;
 
   beforeEach(() => {
-    manager = new ServiceStateManager(['server'], { module: { 'worker.enable': true } });
+    manager = new Manager(['server'], { module: { 'worker.enable': true } });
     manager.registerShutdownHandler = jest.fn();
     manager.shutdown = jest.fn();
   });
@@ -115,7 +115,7 @@ describe('handleSignalMessages', () => {
   let state;
 
   beforeEach(() => {
-    manager = new ServiceStateManager(['server'], { module: { 'worker.enable': true } });
+    manager = new Manager(['server'], { module: { 'worker.enable': true } });
     manager.signalingChannel = mockMessageChannel;
     manager.updateState = jest.fn();
     manager.shutdown = jest.fn();
@@ -164,7 +164,7 @@ describe('updateState', () => {
 
   describe('one state', () => {
     beforeEach(() => {
-      manager = new ServiceStateManager(['server']);
+      manager = new Manager(['server']);
       state = { server: true };
     });
 
@@ -187,7 +187,7 @@ describe('updateState', () => {
 
   describe('two states', () => {
     beforeEach(() => {
-      manager = new ServiceStateManager(['server', 'db']);
+      manager = new Manager(['server', 'db']);
       state = { db: false, server: true };
       manager.serviceStatus = state;
     });
@@ -211,7 +211,7 @@ describe('updateState', () => {
 
   describe('error', () => {
     beforeEach(() => {
-      manager = new ServiceStateManager(['server']);
+      manager = new Manager(['server']);
     });
 
     it('service state is not a boolean', () => {
@@ -230,7 +230,7 @@ describe('updateState', () => {
 
 describe('signalReady', () => {
   it('should send a ready signal', () => {
-    const manager = new ServiceStateManager(['server']);
+    const manager = new Manager(['server']);
     manager.updateState = jest.fn();
 
     manager.signalReady('server');
@@ -242,7 +242,7 @@ describe('signalReady', () => {
 
 describe('signalNotReady', () => {
   it('should send a not ready signal', () => {
-    const manager = new ServiceStateManager(['server']);
+    const manager = new Manager(['server']);
     manager.updateState = jest.fn();
 
     manager.signalNotReady('server');

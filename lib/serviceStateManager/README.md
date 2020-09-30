@@ -16,7 +16,7 @@ functionalities. If you have any doubts, check the example in the
 
 ## **Master Thread**
 
-This is the thread where your service resides. It should instantiate the `ServiceStateManager` to
+This is the thread where your service resides. It should instantiate the `Manager` to
 handle both health check and graceful shutdown functionalities. To do the health check from the
 master thread, you can use events from the object you are requiring a connection (e.g. a Redis
 client). In the events handlers, you can call the `signalReady` and `signalNotReady` functions to
@@ -34,13 +34,13 @@ to use them.
 ## **Worker Thread**
 
 A separate thread to treat all the health checkers that should not interfere in the main thread's
-event loop. This thread is created when the `ServiceStateManager` class is initialized and you've
+event loop. This thread is created when the `Manager` class is initialized and you've
 **enabled it via configuration**.
 
 __ATTENTION__: the worker thread code should be in a separate file from the master thread code.
 Check the [configuration section](#configuration) for more details on its configuration.
 
-Inside its file, you should register functions in the `HealthCheckerWorker` via the
+Inside its file, you should register functions in the `Worker` via the
 `addHealthChecker` function. It will create a node.js `Interval` to periodically call the passed
 function.
 
@@ -51,7 +51,7 @@ The configuration object is divided in 3 parts: `lightship`, `logger` and `modul
 __NOTE THAT__ this configuration is applied only to the master thread. The slave thread does not
 have a configuration object.
 
-__NOTE THAT__ the logger used inside the ServiceStateManager will indirectly inherit the
+__NOTE THAT__ the logger used inside the Manager will indirectly inherit the
 configurations from the application logger, since the SDK Logger class is globally defined.
 
 ## **lightship**
@@ -70,7 +70,7 @@ The default configuration is:
 
 ## **module**
 
-The ServiceStateManager internal configuration. It follows the default dojot configuration object
+The Manager internal configuration. It follows the default dojot configuration object
 model. Check the [ConfigManager documentation](../configManager/README.md).
 
 __NOTE THAT__ we do not use the ConfigManager in this module, since we don't want to accept
@@ -85,7 +85,7 @@ variables.
 
 ## **Configuration object format**
 
-When passing the configuration to the `ServiceStateManager` instance, you should follow this format:
+When passing the configuration to the `Manager` instance, you should follow this format:
 
 ```js
 {

@@ -5,7 +5,7 @@ const { ServiceStateManager, Logger } = require('@dojot/microservice-sdk');
 const init = async () => {
   const logger = new Logger('health-check-worker');
 
-  const worker = new ServiceStateManager.HealthCheckerWorker();
+  const worker = new ServiceStateManager.Worker();
   try {
     await worker.initWorker();
   } catch (error) {

@@ -1,6 +1,6 @@
 const workerThreads = require('worker_threads');
 
-const { ServiceStateManager: { HealthCheckerWorker } } = require('../../../index');
+const { ServiceStateManager: { Worker } } = require('../../../index');
 
 const mockSignalingChannel = {
   on: jest.fn(),
@@ -15,7 +15,7 @@ jest.mock('worker_threads', () => ({
 
 describe('constructor', () => {
   it('should build an instance', () => {
-    const worker = new HealthCheckerWorker();
+    const worker = new Worker();
     expect(worker.signalingChannel).toBeNull();
     expect(worker.healthCheckers).toBeInstanceOf(Map);
   });
@@ -25,7 +25,7 @@ describe('initWorker', () => {
   let worker;
 
   beforeEach(() => {
-    worker = new HealthCheckerWorker();
+    worker = new Worker();
     jest.resetAllMocks();
     jest.useFakeTimers();
   });
@@ -81,7 +81,7 @@ describe('initWorker', () => {
 
 describe('signalReady', () => {
   it('should send a message with the state being true', () => {
-    const worker = new HealthCheckerWorker();
+    const worker = new Worker();
     worker.signalingChannel = mockSignalingChannel;
     worker.signalReady('server');
 
@@ -91,7 +91,7 @@ describe('signalReady', () => {
 
 describe('signalNotReady', () => {
   it('should send a message with the state being false', () => {
-    const worker = new HealthCheckerWorker();
+    const worker = new Worker();
     worker.signalingChannel = mockSignalingChannel;
     worker.signalNotReady('server');
 
@@ -115,7 +115,7 @@ describe('addHealthChecker', () => {
     const func = jest.fn();
     const interval = 1000;
 
-    const worker = new HealthCheckerWorker();
+    const worker = new Worker();
     worker.addHealthChecker(service, func, interval);
 
     expect(worker.healthCheckers.size).toBe(1);
@@ -150,7 +150,7 @@ describe('clearHealthChecker', () => {
     const func = jest.fn();
     const interval = 1000;
 
-    const worker = new HealthCheckerWorker();
+    const worker = new Worker();
     worker.addHealthChecker(service, func, interval);
     expect(worker.healthCheckers.size).toBe(1);
     worker.clearHealthChecker(service);
@@ -161,7 +161,7 @@ describe('clearHealthChecker', () => {
   });
 
   it('should not clear a health checker - not registered', (done) => {
-    const worker = new HealthCheckerWorker();
+    const worker = new Worker();
 
     expect(() => worker.clearHealthChecker(service)).toThrowError(
       `Health checker "${service}" not found`,
@@ -182,7 +182,7 @@ describe('clearAllHealthCheckers', () => {
 
   it('should clear all health checkers - there are two', async () => {
     const interval = 1000;
-    const worker = new HealthCheckerWorker();
+    const worker = new Worker();
     worker.addHealthChecker('server', jest.fn(), interval);
     worker.addHealthChecker('db', jest.fn(), interval);
     worker.clearHealthChecker = jest.fn();
@@ -196,7 +196,7 @@ describe('clearAllHealthCheckers', () => {
     const func = jest.fn();
     const interval = 1000;
 
-    const worker = new HealthCheckerWorker();
+    const worker = new Worker();
     worker.addHealthChecker(service, func, interval);
     worker.clearHealthChecker = jest.fn();
     await worker.clearAllHealthCheckers();
@@ -205,7 +205,7 @@ describe('clearAllHealthCheckers', () => {
   });
 
   it('should clear all health checkers - there are no registered health checkers', async () => {
-    const worker = new HealthCheckerWorker();
+    const worker = new Worker();
     worker.clearHealthChecker = jest.fn();
     await worker.clearAllHealthCheckers();
 

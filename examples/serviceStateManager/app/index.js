@@ -87,7 +87,7 @@ const main = () => {
         logger.info('Received error event');
         stateManager.signalNotReady('server');
         /**
-         * If you'd like to stop the program, you should'nt call process.exit() or anything related
+         * If you'd like to stop the program, you shouldn't call process.exit() or anything related
          * to it; you should register shutdown handlers using the `registerShutdownHandler` function
          * from the manager instance and then call the `shutdown` function to stop your app. This
          * will ensure you have a graceful shutdown.

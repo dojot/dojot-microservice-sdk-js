@@ -13,6 +13,19 @@ image summarizes the module flow:
 <img src="../../docs/images/ConfigManagerFlow.png" alt="Configuration Manager Flow">
 </p>
 
+# Table of Contents
+
+1. [Patterns](#patterns)
+   1. [Environment variables](##environment-variables)
+   2. [User configuration files](##user-configuration-files)
+   3. [Default configuration file](##default-configuration-file)
+   4. [Created configuration file](##created-configuration-file)
+   5. [Environment variables and file parameters](##environment-variables-and-file-parameters)
+   6. [Passing values through environment variables](##passing-values-through-environment-variables)
+2. [Scopes](#scopes)
+3. [Appropriate usage guide](#appropriate-usage-guide)
+4. [Usage](#usage)
+
 # Patterns
 
 ## Environment variables
@@ -174,7 +187,7 @@ this:
 obj.class2['param4.key1']
 ```
 
-# Patterns
+# Appropriate usage guide
 
 For the sake of standardization, we should follow some rules when applying this module to a service:
 

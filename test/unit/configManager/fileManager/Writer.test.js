@@ -8,7 +8,7 @@ const Utils = require('../../../../lib/configManager/Utils');
 jest.mock('fs');
 
 jest.mock('../../../../lib/configManager/Utils', () => ({
-  createFilename: jest.fn(() => './config/testfile.json'),
+  createFilename: jest.fn(() => '/root/project/config/testsvc.json'),
 }));
 
 describe('writeJson', () => {
@@ -16,9 +16,9 @@ describe('writeJson', () => {
     const data = { testParam: 10 };
     const dataInJson = jsonStringify(data);
 
-    Writer.writeJson('testfile', './config', data);
+    Writer.writeJson('/root/project', './config', 'TESTSVC', data);
 
-    expect(Utils.createFilename).toHaveBeenCalledWith('./config', 'testfile.json');
-    expect(fs.writeFileSync).toHaveBeenCalledWith('./config/testfile.json', dataInJson);
+    expect(Utils.createFilename).toHaveBeenCalledWith('/root/project', './config', 'TESTSVC.json');
+    expect(fs.writeFileSync).toHaveBeenCalledWith('/root/project/config/testsvc.json', dataInJson);
   });
 });

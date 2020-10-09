@@ -8,7 +8,8 @@ describe('toCanonicalFormat', () => {
 
 describe('createFilename', () => {
   it('should correctly create the filename', () => {
-    expect(Utils.createFilename('/root/project', './path', 'testFilename')).toEqual('/root/project/path/testfilename');
+    expect(Utils.createFilename('/root/project', './path', 'testFilename'))
+      .toEqual('/root/project/path/testfilename');
   });
 });
 

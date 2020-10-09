@@ -88,7 +88,8 @@ This file is very similar to the previous one. The differences are:
 - It should exists
 - It should not be empty
 - It should be named `default.conf`
-- It should be in a directory named `config` in the project root
+- It should be in a directory named `config` in the project root (you can change the location, but
+it is recommended to not do so to maintain a standard).
 - It accepts types for variables
 - It accepts comments too
 

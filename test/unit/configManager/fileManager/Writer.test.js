@@ -18,7 +18,7 @@ describe('writeJson', () => {
 
     Writer.writeJson('testfile', './config', data);
 
-    expect(Utils.createFilename).toHaveBeenCalledWith('testfile.json', './config');
+    expect(Utils.createFilename).toHaveBeenCalledWith('./config', 'testfile.json');
     expect(fs.writeFileSync).toHaveBeenCalledWith('./config/testfile.json', dataInJson);
   });
 });

@@ -41,7 +41,7 @@ describe('integer', () => {
     expect(TypeConverter.integer(1.8)).toEqual(1);
   });
 
-  it('should not convert to integer - invallid value', () => {
+  it('should not convert to integer - invalid value', () => {
     expect(TypeConverter.integer('.')).toEqual(NaN);
     expect(TypeConverter.integer('a')).toEqual(NaN);
     expect(TypeConverter.integer('')).toEqual(NaN);

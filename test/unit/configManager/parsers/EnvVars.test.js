@@ -22,6 +22,14 @@ describe('parseEnvironmentVariables', () => {
     expect(parsedEnvVars).toEqual(['scope1.param1.key=10', 'scope1.param2.key=20']);
   });
 
+  it('should successfully parse the environment variables - variable with double underscores', () => {
+    process.env.TESTSVC_SCOPE1_PARAM1__KEY = 10;
+
+    const parsedEnvVars = EnvVars.parseEnvironmentVariables('TESTSVC');
+
+    expect(parsedEnvVars).toEqual(['scope1.param1_key=10']);
+  });
+
   it('should successfully parse the environment variables - no variables to be parsed', () => {
     const parsedEnvVars = EnvVars.parseEnvironmentVariables('TESTSVC');
 

@@ -101,7 +101,7 @@ way of handling them. Examples of variables and types:
 scope1.param.boolean.key:boolean=true
 scope1.param.float.key:float=3.1415
 scope1.param.integer.key:integer=10
-scope1.param.string.array.key:string[]=["stringA", 'stringB']
+scope1.param.string.array.key:string[]=["stringA", "stringB"]
 scope2.param.explicit.string.key:string=this is explicitly typed as string
 scope2.param.implicit.string.key=this has the string type
 scope2.param.string.quotation.mark="strings are not delimited, these quotation marks will be in the string"
@@ -111,7 +111,7 @@ The accepted types are:
 - boolean: true or false, case insensitive.
 - float: any value with or without decimal places.
 - integer: any value without decimal places.
-- string[]: a list of strings, must be delimited by [ ] and each string must be delimited by ' or ".
+- string[]: a list of strings, must be delimited by `[ ]` and each string must be delimited by `"`.
 - string: if no type is passed, this is the default. There is no delimitation character.
 
 __NOTE THAT__ only the default configuration file can be typed. The user file and environment

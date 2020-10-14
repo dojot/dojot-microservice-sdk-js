@@ -13,6 +13,37 @@ describe('createFilename', () => {
   });
 });
 
+describe('mergeObjects', () => {
+  it('should merge', () => {
+    const obj1 = {
+      scope1: {
+        param1: 1,
+        param2: ['a', 'b'],
+      },
+    };
+    const obj2 = {
+      scope1: {
+        param1: 2,
+        param2: ['c', 'd', 'e'],
+      },
+    };
+
+    expect(Utils.mergeObjects([obj1, obj2])).toEqual({
+      scope1: {
+        param1: 2,
+        param2: ['c', 'd', 'e'],
+      },
+    });
+
+    expect(Utils.mergeObjects([obj2, obj1])).toEqual({
+      scope1: {
+        param1: 1,
+        param2: ['a', 'b'],
+      },
+    });
+  });
+});
+
 describe('isTypeValid', () => {
   it('should correctly recognize the types', () => {
     expect(Utils.isTypeValid('boolean')).toBeTruthy();

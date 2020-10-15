@@ -14,4 +14,8 @@ describe('preProcess', () => {
     expect(EnvVars.preProcess(['scope1.param1=/root/${TEST_UNDEFINED_VARIABLE:-defaultDir}']))
       .toEqual(['scope1.param1=/root/defaultDir']);
   });
+
+  it('should not parse the env var - empty "${}" clause', () => {
+    expect(EnvVars.preProcess(['scope1.param1=/root/${}'])).toEqual(['scope1.param1=/root/${}']);
+  });
 });

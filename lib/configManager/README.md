@@ -160,6 +160,21 @@ V2K_STRING_LIST_VAR: '["string1", "string2"]'
 V2K_STRING_VAR: "my_string"
 ```
 
+## Using environment variables in `.conf` files
+
+Sometimes you want to use a environment variable in your parameters. You can do it like so:
+
+```
+mqtt.hostname=${HOSTNAME:-v2k-bridge}
+app.config.file=${NODE_ENV:-production}.conf
+```
+
+This is similar to the shell syntax: if the environment variable is not defined, it will use the
+provided value after the `:-` operator (its use is optional). Currently, this is the only supported
+operator.
+
+You can use it in any type of variable.
+
 # Scopes
 
 Let's say you have two classes and need two different configuration objects to pass to them. You can
@@ -215,27 +230,79 @@ default. If you need to provide an object with only underscored parameters, use 
 # Usage
 
 Create the default configuration file `./config/default.conf` in your project's root directory.
+For this example, we will use this `default.conf` file:
 
-Now you can start using the module:
+```
+logger.transport.console.level=info
+logger.verbose:boolean=true
+
+mqtt.client.id:string=${HOSTNAME:-v2k-bridge}
+mqtt.hostname:string=vernemq
+mqtt.port:string=1883
+mqtt.protocol:string=mqtt
+mqtt.qos:integer=1
+mqtt.username:string=${HOSTNAME:-v2k-bridge}
+```
+
+If you want, you can create an user configuration file. In this case, we will use a name other than
+the default one for the example's sake, `test.conf`:
+
+```
+logger.transport.console.level=debug
+
+mqtt.hostname=vernemq-test
+mqtt.qos=0
+```
+
+Now you can start using the module by creating and retrieving the configuration:
 ```js
 const { ConfigManager } = require('@dojot/microservice-sdk');
-ConfigManager.loadSettings('V2K');
-const config = ConfigManager.getConfig();
+// Here we load the settings and use the test.conf file created before
+ConfigManager.loadSettings('V2K', 'test.conf');
+const config = ConfigManager.getConfig('V2K');
 ```
+
+__NOTE THAT__ you don't need to call `loadSettings` every time you need the configuration, you just
+need to call it in your initialization file. In other places where you need it, call `getConfig`.
+
+Remember that some of its variables will be changed to the ones in the `test.conf` file! The final
+configuration object will look like:
+```js
+{
+  // Each object inside the configuration object is called a scope
+  logger: {
+    'transport.console.level': 'debug',
+    verbose: true,
+  },
+  mqtt: {
+    'client.id': 'v2k-bridge',
+    hostname: 'vernemq-test',
+    port: '1883',
+    protocol: 'mqtt',
+    qos: 0,
+    username: 'v2k-bridge',
+  },
+}
+```
+
+Remember that you can also change the configuration via environment variables. In this case, you
+could change, for example, the verbosity of the logger with the `V2K_LOGGER_VERBOSITY` variable.
 
 If you need to convert any object's keys to a new pattern, like camelCase or PascalCase, instead of
 the dotted version we provide, you can use the transformObjectKeys function. You can pass any
 function that receives a string and return a string to this function. Example:
 ```js
-const { ConfigManager } = require('@dojot/microservice-sdk');
 const camelCase = require('lodash/camelCase');
 
-const obj = { 'param1.key1': 'value11', 'param1.key2': 'value12' };
-const newObj = ConfigManager.transformObjectKeys(obj, camelCase);
-console.log(newObj);
-// Should print:
-// { param1Key1: 'value11', param1Key2: 'value12' }
+// Transforming the MQTT configuration to camelCase
+const mqttConfig = ConfigManager.transformObjectKeys(config.mqtt, camelCase);
+// Should return:
+{
+  clientId: 'v2k-bridge',
+  hostname: 'vernemq-test',
+  port: '1883',
+  protocol: 'mqtt',
+  qos: 0,
+  username: 'v2k-bridge',
+}
 ```
-
-__NOTE THAT__ you don't need to call `loadSettings` every time you need the configuration, you just
-need to call it in your initialization file. In other places where you need it, call `getConfig`.

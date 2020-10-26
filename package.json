@@ -63,6 +63,10 @@
     "testRegex": [
       "test/unit/*"
     ],
+    "collectCoverageFrom": [
+      "lib/**/*.js",
+      "!index.js"
+    ],
     "moduleDirectories": [
       "node_modules",
       "lib"

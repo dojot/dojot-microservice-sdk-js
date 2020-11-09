@@ -46,7 +46,7 @@ const initExpress = (stateManager) => {
 };
 
 const main = () => {
-  const eventBasedHealthCheck = (process.env.ENABLE_EVENT_BASED_HEALTH_CHECK == "true");
+  const eventBasedHealthCheck = (process.env.ENABLE_EVENT_BASED_HEALTH_CHECK === 'true');
   /**
    * Initializing the manager, it stores the status of each service and provides the endpoints. This
    * should be instantiated in your application

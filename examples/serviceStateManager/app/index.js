@@ -51,7 +51,7 @@ const main = () => {
    * Initializing the manager, it stores the status of each service and provides the endpoints. This
    * should be instantiated in your application
    */
-  const stateManager = new ServiceStateManager.Manager(['server']);
+  const stateManager = new ServiceStateManager.Manager();
   const app = initExpress(stateManager);
 
   // Retrieving the health check status from the endpoint
@@ -101,10 +101,10 @@ const main = () => {
           .get('localhost:8080/hello')
           .send()
           .then(() => {
-            signalReady('server');
+            signalReady();
           })
           .catch(() => {
-            signalNotReady('server');
+            signalNotReady();
           });
       };
 

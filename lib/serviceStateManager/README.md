@@ -13,9 +13,8 @@ This module is responsible for the health check and graceful shutdown of dojot s
 
 # **Usage**
 
-Instantiate the `Manager` class, passing a list of services you want to register in it. This is an
-important part, since you can only signal services that are registered. Now you can add shutdown
-handlers and health checkers to it.
+Instantiate the `Manager` class and add shutdown handlers and health checkers to it. Whenever you
+want to gracefully shutdown the system, you call the `shutdown` function and you're done.
 
 Beware that when you instantiate the Manager class, an HTTP server is created, by default, in the
 port `9000`. It is the health check server, created by the [lightship library](https://github.com/gajus/lightship/).
@@ -35,6 +34,8 @@ The shutdown handlers are functions that are executed when you want to gracefull
 via the module's `shutdown` function. You can add shutdown functions via the
 `registerShutdownHandler` method.
 
+It is recommended to shutdown only one thing per handler.
+
 ## **Health checking**
 
 The `ServiceStateManager` module provides some flexibility in the signaling of the services, so you
@@ -46,9 +47,14 @@ receiving `close` or `error` events)
 - Managed mode: using the module's internally managed health check interface via the
 `addHealthChecker` method.
 
+It is recommended to create one health check per thing you want to check. For example: you have
+Kafka, VerneMQ and an HTTP server. Each one of these should have its own health checker (their names
+could be something like `kafka`, `verne` and `server`), since we don't want to block the Event Loop
+with long tasks. Each one can be configured with a different interval.
+
 # **Configuration**
 
-The configuration is done via the `Manager` constructor `config` parameter.
+The configuration is done via the `config` parameter when instantiating the `Manager` class.
 
 __NOTE THAT__ the logger used inside the Manager will indirectly inherit the configurations from the
 application logger, since the SDK Logger class is globally defined.

@@ -1,4 +1,6 @@
+const util = require('util');
 const { Logger, Kafka: { Consumer } } = require('../index.js');
+
 
 // Set the global logger properties
 // Console transport is set by default, but with info level
@@ -24,6 +26,17 @@ consumer.init().then(() => {
   logger.info('Application is ready to receive messages from kafka!');
   // the target kafka topic, it could be a String or a RegExp
   const targetTopic = process.env.KAFKA_TOPIC || 'consumer.testing';
+
+  /**
+   * retrieve the status
+   */
+  setInterval(() => {
+    consumer.getStatus().then((value) => {
+      logger.info(`Status: ${util.inspect(value)}`);
+    }).catch((err) => {
+      logger.error(`${err}`);
+    });
+  }, 5000);
 
   // Register callback to process incoming device data
   /* const idCallback = */ consumer.registerCallback(targetTopic, (data) => {

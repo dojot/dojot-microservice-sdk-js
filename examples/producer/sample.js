@@ -31,9 +31,16 @@ const logger = new Logger('sample-producer');
     },
   };
 
+
   logger.debug('Producer will be connected.');
   await producer.connect();
   logger.debug('Producer is connected.');
+
+  producer.getStatus().then((value) => {
+    logger.info(`Status: ${util.inspect(value)}`);
+  }).catch((err) => {
+    logger.error(`${err}`);
+  });
 
   logger.debug(`Producer will send a message: ${util.inspect(message, { depth: null })} in topic ${targetTopic}`);
   await producer.produce(targetTopic, JSON.stringify(message));
@@ -42,6 +49,12 @@ const logger = new Logger('sample-producer');
   logger.debug('Producer will be disconnected.');
   await producer.disconnect();
   logger.debug('Producer is disconnected');
+
+  producer.getStatus().then((value) => {
+    logger.info(`Status: ${util.inspect(value)}`);
+  }).catch((err) => {
+    logger.error(`${err}`);
+  });
 })().catch((error) => {
   logger.error(`Caught an error: ${error.stack || error}`);
 });

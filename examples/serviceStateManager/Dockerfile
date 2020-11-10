@@ -39,5 +39,5 @@ COPY --from=base /opt/example .
 
 CMD ["node", "app/index.js"]
 
-HEALTHCHECK --start-period=2m --interval=30s --timeout=10s --retries=2 \
+HEALTHCHECK --start-period=2m --interval=30s --timeout=10s --retries=3 \
     CMD curl -f http://localhost:9000/health || exit 1

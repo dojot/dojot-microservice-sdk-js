@@ -2,28 +2,22 @@
 
 This module is responsible for the health check and graceful shutdown of dojot services.
 
-# **Structure**
+# **Table of Contents**
 
-The Service State Manager is structured to use 2 threads to support health check. The master thread
-is meant to be the service main thread, where all connections and jobs of the service are done (e.g.
-the V2K component functionality). You can also use the master thread to do some health checks. The
-second thread, called the `worker thread` is meant to run health checks without overloading the
-master thread's event loop.
+1. [Usage](#usage)
+   1. [Shutdown handlers](#shutdown-handlers)
+   2. [Health checking](health-checking)
+2. [Configuration](#configuration)
+   1. [lightship](#lightship)
+   2. [Configuration object format](#configuration-object-format)
 
-In the next sections we will superficially cover what each thread is meant to do and exemplify its
-functionalities. If you have any doubts, check the example in the
-[examples directory](../../examples/serviceStateManager) for a more concrete example.
+# **Usage**
 
-## **Master Thread**
+Instantiate the `Manager` class and add shutdown handlers and health checkers to it. Whenever you
+want to gracefully shutdown the system, you call the `shutdown` function and you're done.
 
-This is the thread where your service resides. It should instantiate the `Manager` to
-handle both health check and graceful shutdown functionalities. To do the health check from the
-master thread, you can use events from the object you are requiring a connection (e.g. a Redis
-client). In the events handlers, you can call the `signalReady` and `signalNotReady` functions to
-signalize whether the service is working or not.
-
-There is, also, an HTTP server running, by default, in the port `9000` inside the master thread. It
-is the health check server, created by the [lightship library](https://github.com/gajus/lightship/).
+Beware that when you instantiate the Manager class, an HTTP server is created, by default, in the
+port `9000`. It is the health check server, created by the [lightship library](https://github.com/gajus/lightship/).
 This port can be changed via the lightship configuration, but we recommend to leave the default
 value to keep the same interface in all dojot services.
 
@@ -31,32 +25,43 @@ The lightship HTTP server provides the interface for Kubernetes probes. Check th
 documentation for more details about the exposed endpoints and the required Kubernetes configuration
 to use them.
 
-## **Worker Thread**
+Don't forget to check the example in the [examples directory](../../examples/serviceStateManager)
+for a practical usage.
 
-A separate thread to treat all the health checkers that should not interfere in the main thread's
-event loop. This thread is created when the `Manager` class is initialized and you've
-**enabled it via configuration**.
+## **Shutdown handlers**
 
-__ATTENTION__: the worker thread code should be in a separate file from the master thread code.
-Check the [configuration section](#configuration) for more details on its configuration.
+The shutdown handlers are functions that are executed when you want to gracefully exit your program
+via the module's `shutdown` function. You can add shutdown functions via the
+`registerShutdownHandler` method.
 
-Inside its file, you should register functions in the `Worker` via the
-`addHealthChecker` function. It will create a node.js `Interval` to periodically call the passed
-function.
+It is recommended to shutdown only one thing per handler.
+
+## **Health checking**
+
+The `ServiceStateManager` module provides some flexibility in the signaling of the services, so you
+can adapt it to your needs. The modes are:
+
+- Manual mode: using the module's `signalReady` and `signalNotReady` functions (e.g.: call
+`signalReady` when the HTTP server receives the `listening` event and call `signalNotReady` when
+receiving `close` or `error` events)
+- Managed mode: using the module's internally managed health check interface via the
+`addHealthChecker` method.
+
+It is recommended to create one health check per thing you want to check. For example: you have
+Kafka, VerneMQ and an HTTP server. Each one of these should have its own health checker (their names
+could be something like `kafka`, `verne` and `server`), since we don't want to block the Event Loop
+with long tasks. Each one can be configured with a different interval.
 
 # **Configuration**
 
-The configuration object is divided in 3 parts: `lightship`, `logger` and `module`.
+The configuration is done via the `config` parameter when instantiating the `Manager` class.
 
-__NOTE THAT__ this configuration is applied only to the master thread. The slave thread does not
-have a configuration object.
-
-__NOTE THAT__ the logger used inside the Manager will indirectly inherit the
-configurations from the application logger, since the SDK Logger class is globally defined.
+__NOTE THAT__ the logger used inside the Manager will indirectly inherit the configurations from the
+application logger, since the SDK Logger class is globally defined.
 
 ## **lightship**
 
-Lightship is the library that provides the graceful shutdown and health check capabilities to our
+Lightship is the library that provides the graceful shutdown and health check capabilities to the
 module. If you would like to change any configuration parameter, please read the library's
 [official documentation](https://github.com/gajus/lightship/#usage) for the accepted parameters.
 
@@ -68,21 +73,6 @@ The default configuration is:
 };
 ```
 
-## **module**
-
-The Manager internal configuration. It follows the default dojot configuration object
-model. Check the [ConfigManager documentation](../configManager/README.md).
-
-__NOTE THAT__ we do not use the ConfigManager in this module, since we don't want to accept
-environment variables inside the SDK modules, we only follow its naming patterns for configuration
-variables.
-
-| Name          | Description                             | Default value         | Accepted values
-| ------------- | --------------------------------------- | --------------------- | ---------------
-| worker.enable | Whether to use the worker thread or not | false                 | boolean
-| worker.file   | The worker file location                | healthcheck/Worker.js | path
-
-
 ## **Configuration object format**
 
 When passing the configuration to the `Manager` instance, you should follow this format:
@@ -91,9 +81,7 @@ When passing the configuration to the `Manager` instance, you should follow this
 {
   lightship: {
     detectKubernetes: false,
-  },
-  module: {
-    'worker.file': 'healthcheck/Worker.js',
+    // any other configurations you would like to provide to Lightship
   },
 }
 ```

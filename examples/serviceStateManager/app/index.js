@@ -23,20 +23,7 @@ const sleep = (ms) => new Promise((resolve) => {
   setTimeout(resolve, ms);
 });
 
-const main = () => {
-  const enableWorker = false;
-  /**
-   * Initializing the manager, it stores the status of each service and provides the endpoints. This
-   * should be instantiated in your application
-   */
-  const stateManager = new ServiceStateManager.Manager(
-    ['server'],
-    {
-      module: {
-        'worker.enable': enableWorker,
-      },
-    },
-  );
+const initExpress = (stateManager) => {
   const app = express();
 
   app.get('/hello', async (req, res) => {
@@ -55,16 +42,28 @@ const main = () => {
     await beacon.die();
   });
 
+  return app;
+};
+
+const main = () => {
+  const eventBasedHealthCheck = (process.env.ENABLE_EVENT_BASED_HEALTH_CHECK === 'true');
+  /**
+   * Initializing the manager, it stores the status of each service and provides the endpoints. This
+   * should be instantiated in your application
+   */
+  const stateManager = new ServiceStateManager.Manager();
+  const app = initExpress(stateManager);
+
   // Retrieving the health check status from the endpoint
   setInterval(() => {
     superagent
       .get('localhost:9000/health')
       .send()
       .then(() => {
-        logger.info('The server is ready!');
+        logger.info('Health check status is OK');
       })
       .catch(() => {
-        logger.warn('The server is not ready!');
+        logger.warn('Health check status is NOT OK');
       });
   }, 1000);
 
@@ -74,8 +73,9 @@ const main = () => {
       logger.info('The server has started!');
     });
 
-    // Example of health check inside the master thread
-    if (!enableWorker) {
+    // Example of event-based health checker
+    if (eventBasedHealthCheck) {
+      // Using events from the server to create the health checker
       server.on('listening', () => {
         stateManager.signalReady('server');
       });
@@ -94,6 +94,21 @@ const main = () => {
          */
         stateManager.shutdown();
       });
+    // Example of ServiceStateManager-controlled health checker
+    } else {
+      const httpHealthChecker = (signalReady, signalNotReady) => {
+        superagent
+          .get('localhost:8080/hello')
+          .send()
+          .then(() => {
+            signalReady();
+          })
+          .catch(() => {
+            signalNotReady();
+          });
+      };
+
+      stateManager.addHealthChecker('server', httpHealthChecker, 5000);
     }
 
     stateManager.registerShutdownHandler(() => new Promise((resolve, reject) => {

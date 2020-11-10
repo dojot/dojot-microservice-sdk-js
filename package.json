@@ -4,7 +4,7 @@
   "description": "A SDK to help to build microservices for the dojot platform",
   "engines": {
     "node": ">=12.18.4",
-    "npm": ">=6.14.8"
+    "npm": ">=6.14.6"
   },
   "scripts": {
     "test": "jest",
@@ -17,7 +17,8 @@
   "contributors": [
     "Eduardo Garcia Misiuk",
     "Mariane Previde",
-    "Raul Negreiros"
+    "Raul Negreiros",
+    "Jonaphael Aristil"
   ],
   "license": "GPL-3.0",
   "homepage": "https://github.com/dojot/dojot-microservice-sdk-js",
@@ -44,7 +45,7 @@
     "async": "^3.1.0",
     "fast-safe-stringify": "^2.0.7",
     "flat": "^5.0.0",
-    "lightship": "^6.1.0",
+    "lightship": "^6.2.1",
     "lodash": "^4.17.19",
     "node-rdkafka": "^2.8.0",
     "uuid": "^3.3.3",
@@ -55,13 +56,17 @@
     "eslint": "^6.8.0",
     "eslint-config-airbnb-base": "^14.0.0",
     "eslint-plugin-import": "^2.19.1",
-    "jest": "^24.9.0",
+    "jest": "^26.6.3",
     "triple-beam": "^1.3.0"
   },
   "jest": {
     "verbose": true,
     "testRegex": [
       "test/unit/*"
+    ],
+    "collectCoverageFrom": [
+      "lib/**/*.js",
+      "!index.js"
     ],
     "moduleDirectories": [
       "node_modules",

@@ -9,16 +9,15 @@ To run the example:
 docker-compose up
 ```
 
-## Overview
+# Overview
 
 This example starts an HTTP server using Express and shuts it down after some time. In the meantime,
 you can do requests to `/hello`, for a simple test, or to `/long`, to simulate a long job running in
 the endpoint. The latter will block the server from stopping until the job is done, to demonstrate
 the usage of [lightship beacons](https://github.com/gajus/lightship/#beacons).
 
-You can also change which type of health checking you want to do: using the worker thread or doing
-it all in the master thread.
+## Changing health check type
 
-__ATTENTION__: there is a problem when using `node rdkafka` library in the worker threads. Even if
-you don't use it in the worker thread, it is imported with the SDK module, crashing the worker, so
-it can't be used **by now**.
+In this example, we show how to change the healthiness of a service via two different (but
+equivalent) ways. To toggle between each mode, change the `ENABLE_EVENT_BASED_HEALTH_CHECK`
+environment variable in the `docker-compose.yml` file.

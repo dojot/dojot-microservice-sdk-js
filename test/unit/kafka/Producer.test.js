@@ -7,6 +7,7 @@
  */
 
 const Kafka = require('node-rdkafka');
+const Helper = require('../../../lib/kafka/Helper');
 const Producer = require('../../../lib/kafka/Producer');
 
 //
@@ -14,6 +15,8 @@ const Producer = require('../../../lib/kafka/Producer');
 //
 jest.mock('node-rdkafka');
 jest.mock('logging/Logger.js');
+jest.mock('../../../lib/kafka/Helper');
+
 jest.useFakeTimers();
 
 describe('Kafka producer', () => {
@@ -337,6 +340,15 @@ describe('Kafka producer', () => {
         done('promise should be resolved.');
       });
       // << Results verification
+    });
+  });
+
+  describe('Kafka Get status', () => {
+    it('should call a helper get status', async () => {
+      const producer = new Producer(mockConfig);
+
+      await producer.getStatus();
+      expect(Helper.getStatus).toBeCalledWith(producer.producer);
     });
   });
 

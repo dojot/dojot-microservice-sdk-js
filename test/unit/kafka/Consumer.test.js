@@ -5,6 +5,7 @@ jest.mock('logging/Logger.js');
 jest.mock('kafka/CommitManager.js');
 jest.mock('async');
 jest.mock('uuid/v4');
+jest.mock('kafka/Helper');
 
 const uuidMock = require('uuid/v4');
 
@@ -37,6 +38,7 @@ AsyncMock.process = jest.fn(async () => {
 });
 
 const KafkaMock = require('node-rdkafka');
+const Helper = require('../../../lib/kafka/Helper');
 
 // Kafka Consumer Mock
 KafkaMock.KafkaConsumer = class {
@@ -164,6 +166,13 @@ test('Basic initialization', async () => {
   expect(consumer.isReady).toBe(true);
   expect(consumer.consumer.consume).toHaveBeenCalled();
   expect(consumer.refreshSubscriptions).toHaveBeenCalledTimes(1);
+});
+
+test('Get consumer status', async () => {
+  const consumer = new Consumer();
+
+  await consumer.getStatus();
+  expect(Helper.getStatus).toBeCalledWith(consumer.consumer);
 });
 
 test('Failed initialization', async () => {

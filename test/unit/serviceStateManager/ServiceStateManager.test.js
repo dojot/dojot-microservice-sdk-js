@@ -116,16 +116,11 @@ describe('Manager', () => {
       expect(manager.updateLightshipState).toHaveBeenCalled();
     });
 
-    it('should throw an error - service not registered', () => {
-      expect(() => manager.updateState('db', true)).toThrow();
-    });
+    it('should not update state - service not registered', () => {
+      manager.updateLightshipState = jest.fn();
+      manager.updateState('db', true);
 
-    it('should not update the service - services are being removed in the same instant', () => {
-      manager.registerService('server');
-      manager.areServicesBeingRemoved = true;
-      manager.updateState('server', true);
-
-      expect(manager.services.get('server').status).toBeFalsy();
+      expect(manager.updateLightshipState).not.toHaveBeenCalled();
     });
   });
 

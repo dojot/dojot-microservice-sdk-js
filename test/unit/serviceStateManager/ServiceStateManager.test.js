@@ -1,4 +1,4 @@
-const Manager = require('../../../lib/serviceStateManager/Manager');
+const Manager = require('../../../lib/serviceStateManager/ServiceStateManager');
 
 jest.mock('express');
 jest.mock('lightship', () => ({

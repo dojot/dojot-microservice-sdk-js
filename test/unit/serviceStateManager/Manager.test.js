@@ -1,4 +1,4 @@
-const { Manager } = require('../../../lib/serviceStateManager');
+const Manager = require('../../../lib/serviceStateManager/Manager');
 
 jest.mock('express');
 jest.mock('lightship', () => ({
@@ -14,8 +14,10 @@ jest.mock('lightship', () => ({
 }));
 jest.mock('logging/Logger.js', () => ({
   Logger: jest.fn(() => ({
+    debug: jest.fn(),
     error: jest.fn(),
     info: jest.fn(),
+    warn: jest.fn(),
   })),
 }));
 
@@ -38,10 +40,16 @@ describe('Manager', () => {
       expect(manager.services).toBeDefined();
       expect(manager.services).toBeInstanceOf(Map);
       expect(manager.logger).toBeDefined();
+      expect(manager.areServicesBeingRemoved).toBeFalsy();
     });
 
     it('should instantiate correctly - config with different values from the default', () => {
-      const config = { lightship: { detectKubernetes: true } };
+      const config = {
+        lightship: {
+          detectKubernetes: true,
+          terminate: expect.any(Function),
+        },
+      };
       const manager = new Manager(config);
 
       expect(manager.lightship).toBeDefined();
@@ -55,122 +63,97 @@ describe('Manager', () => {
       expect(manager.services).toBeDefined();
       expect(manager.services).toBeInstanceOf(Map);
       expect(manager.logger).toBeDefined();
+      expect(manager.areServicesBeingRemoved).toBeFalsy();
+    });
+  });
+
+  describe('updateLightshipState', () => {
+    let manager;
+
+    beforeEach(() => {
+      manager = new Manager();
+      manager.registerService('server');
+    });
+
+    it('should signal to lightship that it is ready', () => {
+      manager.updateState('server', true);
+      manager.updateLightshipState();
+
+      expect(manager.lightship.signalReady).toHaveBeenCalled();
+    });
+
+    it('should signal to lightship that it is not ready', () => {
+      manager.updateState('server', false);
+      manager.updateLightshipState();
+
+      expect(manager.lightship.signalNotReady).toHaveBeenCalled();
     });
   });
 
   describe('updateState', () => {
     let manager;
 
-    const interval = 30000;
+    beforeEach(() => {
+      manager = new Manager();
+      manager.updateLightshipState = jest.fn();
+    });
+
+    it('should correctly update the state - update to true', () => {
+      manager.registerService('server');
+
+      expect(() => manager.updateState('server', true)).not.toThrow();
+
+      expect(manager.services.get('server').status).toBeTruthy();
+      expect(manager.updateLightshipState).toHaveBeenCalled();
+    });
+
+    it('should correctly update the state - update to false', () => {
+      manager.registerService('server');
+
+      expect(() => manager.updateState('server', false)).not.toThrow();
+
+      expect(manager.services.get('server').status).toBeFalsy();
+      expect(manager.updateLightshipState).toHaveBeenCalled();
+    });
+
+    it('should throw an error - service not registered', () => {
+      expect(() => manager.updateState('db', true)).toThrow();
+    });
+
+    it('should not update the service - services are being removed in the same instant', () => {
+      manager.registerService('server');
+      manager.areServicesBeingRemoved = true;
+      manager.updateState('server', true);
+
+      expect(manager.services.get('server').status).toBeFalsy();
+    });
+  });
+
+  describe('registerService', () => {
+    let manager;
 
     beforeEach(() => {
-      jest.useFakeTimers();
+      manager = new Manager();
     });
 
-    afterEach(() => {
-      jest.useRealTimers();
+    it('should successfully register one service', () => {
+      manager.registerService('server');
+
+      expect(manager.services.size).toEqual(1);
     });
 
-    describe('one state', () => {
-      beforeEach(() => {
-        manager = new Manager();
-        manager.addHealthChecker('server', jest.fn(), interval);
-      });
+    it('should successfully register two services', () => {
+      manager.registerService('server');
+      manager.registerService('kafka');
 
-      it('should correctly update the state - update to true and signal as ready', (done) => {
-        expect(() => manager.updateState('server', true)).not.toThrow();
-
-        expect(manager.services.size).toEqual(1);
-
-        const service = manager.services.get('server');
-
-        expect(service).toBeDefined();
-        expect(service.status).toBeTruthy();
-        expect(manager.lightship.signalReady).toHaveBeenCalledTimes(1);
-
-        done();
-      });
-
-      it('should correctly update the state - update to false and signal as not ready', (done) => {
-        expect(() => manager.updateState('server', false)).not.toThrow();
-
-        expect(manager.services.size).toEqual(1);
-
-        const service = manager.services.get('server');
-
-        expect(service).toBeDefined();
-        expect(service.status).toBeFalsy();
-        expect(manager.lightship.signalNotReady).toHaveBeenCalledTimes(1);
-
-        done();
-      });
+      expect(manager.services.size).toEqual(2);
     });
 
-    describe('two states', () => {
-      beforeEach(() => {
-        manager = new Manager();
-        manager.addHealthChecker('db', jest.fn(), interval);
-        manager.addHealthChecker('server', jest.fn(), interval);
-      });
+    it('should not register the same service twice', () => {
+      manager.registerService('server');
+      expect(() => manager.registerService('server')).toThrow();
 
-      it('should correctly update one state - update db to true and signal as not ready', () => {
-        expect(() => manager.updateState('db', true)).not.toThrow();
-
-        const service = manager.services.get('db');
-        expect(service).toBeDefined();
-        expect(service.status).toBeTruthy();
-
-        expect(manager.lightship.signalNotReady).toHaveBeenCalledTimes(1);
-      });
-
-      it('should correctly update one state - update db and server to true and signal as ready', () => {
-        expect(() => manager.updateState('db', true)).not.toThrow();
-        expect(() => manager.updateState('server', true)).not.toThrow();
-
-        const serviceDb = manager.services.get('db');
-        expect(serviceDb).toBeDefined();
-        expect(serviceDb.status).toBeTruthy();
-
-        const serviceServer = manager.services.get('server');
-        expect(serviceServer).toBeDefined();
-        expect(serviceServer.status).toBeTruthy();
-
-        expect(manager.lightship.signalReady).toHaveBeenCalledTimes(1);
-      });
-    });
-
-    describe('error', () => {
-      beforeEach(() => {
-        manager = new Manager();
-      });
-
-      it('service not registered', () => {
-        expect(() => manager.updateState('db', true)).toThrow();
-      });
-    });
-  });
-
-  describe('signalReady', () => {
-    it('should send a ready signal', () => {
-      const manager = new Manager();
-      manager.updateState = jest.fn();
-
-      manager.signalReady('server');
-
-      expect(manager.updateState).toHaveBeenCalledTimes(1);
-      expect(manager.updateState).toHaveBeenCalledWith('server', true);
-    });
-  });
-
-  describe('signalNotReady', () => {
-    it('should send a not ready signal', () => {
-      const manager = new Manager();
-      manager.updateState = jest.fn();
-
-      manager.signalNotReady('server');
-
-      expect(manager.updateState).toHaveBeenCalledTimes(1);
-      expect(manager.updateState).toHaveBeenCalledWith('server', false);
+      expect(manager.services.size).toEqual(1);
     });
   });
 
@@ -194,6 +177,7 @@ describe('Manager', () => {
     it('should add a new health checker', (done) => {
       expect.assertions(4);
 
+      manager.registerService(service);
       manager.addHealthChecker(service, healthChecker, interval);
 
       expect(manager.services.size).toBe(1);
@@ -206,8 +190,15 @@ describe('Manager', () => {
     });
 
     it('should not add a new health checker - there already is one registered for the service', (done) => {
+      manager.registerService(service);
       manager.addHealthChecker(service, healthChecker, interval);
-      jest.clearAllMocks();
+      expect(() => manager.addHealthChecker(service, healthChecker, interval)).toThrow();
+
+      done();
+    });
+
+
+    it('should not add a new health checker - service not registered', (done) => {
       expect(() => manager.addHealthChecker(service, healthChecker, interval)).toThrow();
 
       done();
@@ -215,6 +206,7 @@ describe('Manager', () => {
 
     describe('setInterval function', () => {
       beforeEach(() => {
+        manager.registerService(service);
         manager.addHealthChecker(service, healthChecker, interval);
       });
 
@@ -243,46 +235,31 @@ describe('Manager', () => {
     });
   });
 
-  describe('clearHealthChecker', () => {
+  describe('removeService', () => {
     let manager;
 
     beforeEach(() => {
       manager = new Manager();
-      jest.useFakeTimers();
     });
 
-    afterEach(() => {
-      jest.useRealTimers();
-    });
-
-    it('should clear a health checker', (done) => {
-      expect.assertions(4);
-
-      const func = jest.fn();
-      const interval = 1000;
-
-      manager.addHealthChecker('server', func, interval);
+    it('should clear a health checker', () => {
+      manager.registerService('server');
       expect(manager.services.size).toBe(1);
-      manager.clearHealthChecker('server');
+      manager.removeService('server');
       expect(manager.services.size).toBe(0);
       expect(manager.services.get('server')).toBeUndefined();
-      expect(clearInterval).toHaveBeenCalled();
-
-      done();
     });
 
-    it('should not clear a health checker - not registered', (done) => {
-      expect.assertions(1);
+    it('should not clear a health checker - not registered', () => {
+      manager.registerService('server');
 
-      manager.clearHealthChecker('server');
-
-      expect(clearInterval).not.toHaveBeenCalled();
-
-      done();
+      expect(manager.services.size).toEqual(1);
+      manager.removeService('kafka');
+      expect(manager.services.size).toEqual(1);
     });
   });
 
-  describe('clearAllHealthCheckers', () => {
+  describe('removeAllServices', () => {
     let manager;
 
     beforeEach(() => {
@@ -290,21 +267,22 @@ describe('Manager', () => {
     });
 
     it('should remove all health checkers', () => {
-      manager.addHealthChecker('server', jest.fn(), 1000);
-      manager.clearHealthChecker = jest.fn();
+      const removeServiceSpy = jest.spyOn(manager, 'removeService');
 
-      manager.clearAllHealthCheckers();
+      manager.registerService('server');
 
-      expect(manager.clearHealthChecker).toHaveBeenCalledTimes(1);
+      manager.removeAllServices();
+
+      expect(removeServiceSpy).toHaveBeenCalledTimes(1);
       expect(manager.services.size).toEqual(0);
     });
 
-    it('should not remove the health checkers - there is no health checker', () => {
-      manager.clearHealthChecker = jest.fn();
+    it('should not remove the services - there are no registered services', () => {
+      manager.removeService = jest.fn();
 
-      manager.clearAllHealthCheckers();
+      manager.removeAllServices();
 
-      expect(manager.clearHealthChecker).not.toHaveBeenCalled();
+      expect(manager.removeService).not.toHaveBeenCalled();
     });
   });
 });

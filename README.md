@@ -19,3 +19,4 @@ attend the dojot microservices necessities.
   - [Kafka's Producer](https://github.com/dojot/dojot-microservice-sdk-js/blob/master/examples/producer/README.md)
   - [Logger](https://github.com/dojot/dojot-microservice-sdk-js/blob/master/examples/logging/README.md)
   - [Service State Manager](https://github.com/dojot/dojot-microservice-sdk-js/blob/master/examples/serviceStateManager/README.md)
+  - [Backend web utils](https://github.com/dojot/dojot-microservice-sdk-js/blob/master/examples/web/README.md)

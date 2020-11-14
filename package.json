@@ -18,7 +18,8 @@
     "Eduardo Garcia Misiuk",
     "Mariane Previde",
     "Raul Negreiros",
-    "Jonaphael Aristil"
+    "Jonaphael Aristil",
+    "Thiago de Paula Ferreira"
   ],
   "license": "GPL-3.0",
   "homepage": "https://github.com/dojot/dojot-microservice-sdk-js",
@@ -43,11 +44,21 @@
   ],
   "dependencies": {
     "async": "^3.1.0",
+    "compression": "^1.7.4",
+    "express": "^4.17.1",
+    "express-async-errors": "^3.1.1",
+    "express-paginate": "^1.0.2",
+    "express-request-id": "^1.4.1",
+    "express-ws": "^4.0.0",
     "fast-safe-stringify": "^2.0.7",
     "flat": "^5.0.0",
+    "http-errors": "^1.8.0",
     "lightship": "^6.2.1",
     "lodash": "^4.17.19",
+    "morgan": "^1.10.0",
     "node-rdkafka": "^2.8.0",
+    "on-finished": "^2.3.0",
+    "serve-index": "^1.9.1",
     "uuid": "^3.3.3",
     "winston": "^3.2.1",
     "winston-daily-rotate-file": "^4.4.2"

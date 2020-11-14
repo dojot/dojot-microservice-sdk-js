@@ -3,6 +3,7 @@ const Producer = require('./lib/kafka/Producer');
 const { Logger } = require('./lib/logging/Logger');
 const ConfigManager = require('./lib/configManager');
 const ServiceStateManager = require('./lib/serviceStateManager/ServiceStateManager');
+const web = require('./lib/web');
 
 module.exports = {
   Kafka: {
@@ -12,4 +13,5 @@ module.exports = {
   Logger,
   ConfigManager,
   ServiceStateManager,
+  web,
 };

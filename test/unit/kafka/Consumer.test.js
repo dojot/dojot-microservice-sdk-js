@@ -61,7 +61,7 @@ KafkaMock.KafkaConsumer = class {
     this.resume = jest.fn();
     this.assignments = jest.fn();
     this.unassign = jest.fn();
-    this.disconnect = jest.fn();
+    this.disconnect = jest.fn((cb) => cb());
   }
 };
 
@@ -190,6 +190,31 @@ test('Failed initialization', async () => {
   }
 
   expect(consumer.isReady).toBe(false);
+});
+
+test('Finish - success even consumer not ready', async () => {
+  const consumer = new Consumer();
+
+  consumer.unsubscribe = jest.fn();
+  consumer.disconnect = jest.fn();
+
+  await consumer.finish();
+  expect(consumer.unsubscribe).not.toHaveBeenCalled();
+  expect(consumer.disconnect).not.toHaveBeenCalled();
+});
+
+test('Finish - success', (done) => {
+  const consumer = new Consumer();
+  consumer.isReady = true;
+  consumer.unsubscribe = jest.fn();
+
+  consumer.commitManager = new CommitManagerMock();
+  consumer.commitManager.commitProcessedOffsets = jest.fn(() => Promise.resolve());
+
+  consumer.finish().then(() => {
+    expect(consumer.isReady).toBeFalsy();
+    done();
+  }).catch(done.fail);
 });
 
 describe('Validates registerCallback', () => {

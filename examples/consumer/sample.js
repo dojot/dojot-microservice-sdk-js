@@ -49,7 +49,7 @@ consumer.init().then(() => {
 
 
   // this example runs for 5 minutes after that its deinit the consumer
-  setTimeout( async () => {
+  setTimeout(async () => {
     clearInterval(getStatusInterval);
     await consumer.deinit();
   }, 30000); // 300000

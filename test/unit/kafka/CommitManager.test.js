@@ -37,6 +37,28 @@ test('Initialization with a preconfigured caller', async () => {
   expect(clearInterval).toHaveBeenCalledTimes(1);
 });
 
+test('Finish - clear initialized caller', () => {
+  const commitCallback = jest.fn();
+  const commitInterval = 5000;
+  const commitManager = new CommitManager(commitCallback, commitInterval);
+
+  // fake caller
+  const fakeInterval = 1000;
+  commitManager.caller = setInterval(() => {}, fakeInterval);
+
+  commitManager.finish();
+  expect(clearInterval).toHaveBeenCalledTimes(1);
+  expect(clearInterval).toHaveBeenLastCalledWith(commitManager.caller);
+});
+
+test('Finish - commitManager not initialized', () => {
+  const commitCallback = jest.fn();
+  const commitManager = new CommitManager(commitCallback);
+
+  commitManager.finish();
+  expect(clearInterval).not.toHaveBeenCalled();
+});
+
 test('start processing', async () => {
   const commitCallback = jest.fn();
   const commitInterval = 5000;

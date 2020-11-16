@@ -61,6 +61,7 @@ KafkaMock.KafkaConsumer = class {
     this.resume = jest.fn();
     this.assignments = jest.fn();
     this.unassign = jest.fn();
+    this.disconnect = jest.fn();
   }
 };
 

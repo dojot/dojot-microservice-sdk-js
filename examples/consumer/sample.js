@@ -48,11 +48,11 @@ consumer.init().then(() => {
   });
 
 
-  // this example runs for 5 minutes after that its deinit the consumer
+  // this example runs for 30 seconds after that, finish the consumer
   setTimeout(async () => {
     clearInterval(getStatusInterval);
-    await consumer.deinit();
-  }, 30000); // 300000
+    await consumer.finish();
+  }, 30000);
 }).catch((error) => {
   logger.error(`Caught an error: ${error.stack || error}`);
 });

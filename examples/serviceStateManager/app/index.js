@@ -51,7 +51,9 @@ const main = () => {
    * Initializing the manager, it stores the status of each service and provides the endpoints. This
    * should be instantiated in your application
    */
-  const stateManager = new ServiceStateManager.Manager();
+  const stateManager = new ServiceStateManager();
+  stateManager.registerService('server');
+
   const app = initExpress(stateManager);
 
   // Retrieving the health check status from the endpoint
@@ -96,17 +98,19 @@ const main = () => {
       });
     // Example of ServiceStateManager-controlled health checker
     } else {
-      const httpHealthChecker = (signalReady, signalNotReady) => {
+      const httpHealthChecker = (signalReady, signalNotReady) => new Promise((resolve) => {
         superagent
           .get('localhost:8080/hello')
           .send()
           .then(() => {
             signalReady();
+            resolve();
           })
           .catch(() => {
             signalNotReady();
+            resolve();
           });
-      };
+      });
 
       stateManager.addHealthChecker('server', httpHealthChecker, 5000);
     }

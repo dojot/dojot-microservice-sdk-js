@@ -194,18 +194,15 @@ test('Failed initialization', async () => {
 
 test('Finish - succeed even when the consumer is not ready', async () => {
   const consumer = new Consumer();
-
-  consumer.unsubscribe = jest.fn();
-  consumer.disconnect = jest.fn();
+  consumer.consumer = new KafkaMock.KafkaConsumer();
 
   await consumer.finish();
-  expect(consumer.unsubscribe).not.toHaveBeenCalled();
-  expect(consumer.disconnect).not.toHaveBeenCalled();
+  expect(consumer.consumer.unsubscribe).not.toHaveBeenCalled();
+  expect(consumer.consumer.disconnect).not.toHaveBeenCalled();
 });
 
 test('Finish - success', (done) => {
   const consumer = new Consumer();
-  consumer.unsubscribe = jest.fn();
   consumer.consumer = new KafkaMock.KafkaConsumer();
 
   consumer.init();
@@ -213,7 +210,8 @@ test('Finish - success', (done) => {
 
 
   consumer.commitManager = new CommitManagerMock();
-  consumer.commitManager.commitProcessedOffsets = jest.fn(() => Promise.resolve());
+  consumer.commitManager.finish = jest.fn(() => Promise.resolve());
+
 
   const callbackPromiseDisconnect = new Promise((resolve) => {
     const mockDisconnectedEvent = consumer.consumer.on.mock.calls[3][1];

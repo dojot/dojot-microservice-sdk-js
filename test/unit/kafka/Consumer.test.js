@@ -205,17 +205,33 @@ test('Finish - success even consumer not ready', async () => {
 
 test('Finish - success', (done) => {
   const consumer = new Consumer();
-  consumer.isReady = true;
+  // consumer.isReady = true;
   consumer.unsubscribe = jest.fn();
+  consumer.consumer = new KafkaMock.KafkaConsumer();
+
+  consumer.init();
+  consumer.isReady = true;
+
 
   consumer.commitManager = new CommitManagerMock();
   consumer.commitManager.commitProcessedOffsets = jest.fn(() => Promise.resolve());
 
-  consumer.finish().then(() => {
+  const callbackPromiseDisconnect = new Promise((resolve) => {
+    const mockDisconnectedEvent = consumer.consumer.on.mock.calls[3][1];
+    mockDisconnectedEvent();
+    // set to ready again to test finish func
+    consumer.isReady = true;
+    resolve();
+  });
+
+  const consumerFinishPromise = consumer.finish();
+
+  Promise.all([callbackPromiseDisconnect, consumerFinishPromise]).then(() => {
     expect(consumer.isReady).toBeFalsy();
     done();
   }).catch(done.fail);
 });
+
 
 describe('Validates registerCallback', () => {
   it('using explicit topic', () => {

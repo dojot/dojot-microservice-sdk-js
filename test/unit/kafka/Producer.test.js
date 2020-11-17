@@ -67,7 +67,7 @@ describe('Kafka producer', () => {
   });
 
   describe('Producer creation', () => {
-    it('Should create a producer connect and fail produce', () => {
+    it('Should create a producer connection and fail to produce', () => {
       const producer = new Producer();
       producer.connect();
 

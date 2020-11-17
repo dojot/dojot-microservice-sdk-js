@@ -192,7 +192,7 @@ test('Failed initialization', async () => {
   expect(consumer.isReady).toBe(false);
 });
 
-test('Finish - success even consumer not ready', async () => {
+test('Finish - succeed even when the consumer is not ready', async () => {
   const consumer = new Consumer();
 
   consumer.unsubscribe = jest.fn();
@@ -205,7 +205,6 @@ test('Finish - success even consumer not ready', async () => {
 
 test('Finish - success', (done) => {
   const consumer = new Consumer();
-  // consumer.isReady = true;
   consumer.unsubscribe = jest.fn();
   consumer.consumer = new KafkaMock.KafkaConsumer();
 

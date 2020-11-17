@@ -16,6 +16,12 @@ test('Basic initialization', async () => {
   expect(setInterval).toHaveBeenCalledWith(expect.any(Function), commitInterval);
 });
 
+test('notifyFinishedProcessing test', () => {
+  const commitManager = new CommitManager();
+  commitManager.notifyFinishedProcessing({});
+  expect(commitManager.topics).toStrictEqual({});
+});
+
 test('Initialization with a preconfigured caller', async () => {
   jest.useFakeTimers();
   const commitCallback = jest.fn();

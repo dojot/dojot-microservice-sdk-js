@@ -90,6 +90,12 @@ describe('Logger configuration', () => {
     expect(Logger.isTransportSet('file')).toBeTruthy();
   });
 
+  test('Undefined initialization and fail transport', () => {
+    const logger = new Logger(undefined);
+    expect(logger).toBeDefined();
+    expect(Logger.isTransportSet).toThrow();
+  });
+
   test('Unset valid transports', () => {
     // set transports
     // console set by default

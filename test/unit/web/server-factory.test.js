@@ -8,7 +8,7 @@ const https = require('https');
 const createServer = require('../../../lib/web/server-factory');
 const { Logger } = require('../../../lib/logging/Logger');
 
-const logger = new Logger();
+const logger = new Logger('HTTP Server');
 logger.debug = jest.fn();
 
 describe('HTTP Server', () => {

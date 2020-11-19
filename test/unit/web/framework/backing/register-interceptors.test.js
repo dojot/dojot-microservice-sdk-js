@@ -8,7 +8,7 @@ const express = require('express');
 const registerInterceptors = require('../../../../../lib/web/framework/backing/register-interceptors');
 const { Logger } = require('../../../../../lib/logging/Logger');
 
-const logger = new Logger();
+const logger = new Logger('Register Interceptors');
 logger.debug = jest.fn();
 
 describe('Express Framework - Register Interceptors', () => {

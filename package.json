@@ -9,6 +9,7 @@
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watchAll",
+    "debugtest": "node --inspect-brk node_modules/.bin/jest --runInBand",
     "lint": "eslint --ext .js .",
     "lint:fix": "eslint --fix --ext .js ."
   },

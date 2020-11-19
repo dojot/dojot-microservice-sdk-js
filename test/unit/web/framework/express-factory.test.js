@@ -1,9 +1,13 @@
 jest.mock('express-ws', () => jest.fn());
 jest.mock('../../../../lib/web/framework/backing/register-interceptors', () => jest.fn());
 jest.mock('../../../../lib/web/framework/backing/register-routes', () => jest.fn());
-jest.mock('../../../../lib/web/framework/backing/default-error-handler', () => (
-  jest.fn(() => jest.fn())
-));
+jest.mock('../../../../lib/web/framework/backing/default-error-handler',
+  () => jest.fn().mockImplementation(
+    () => (err, req, res, next) => {
+      res.status(404).json({ error: err.message });
+      next('route');
+    },
+  ));
 
 const request = require('supertest');
 const expressWS = require('express-ws');
@@ -14,7 +18,7 @@ const defaultErrorHandler = require('../../../../lib/web/framework/backing/defau
 const { createServer, framework: { createExpress } } = require('../../../../lib/web');
 const { Logger } = require('../../../../lib/logging/Logger');
 
-const logger = new Logger();
+const logger = new Logger('Express Framework');
 logger.debug = jest.fn();
 
 describe('Express Framework', () => {
@@ -22,7 +26,7 @@ describe('Express Framework', () => {
     jest.clearAllMocks();
   });
 
-  it('should config a web framework', () => {
+  it('should configure a web framework', () => {
     createExpress({
       logger, routes: [{}], interceptors: [{}],
     });
@@ -31,7 +35,7 @@ describe('Express Framework', () => {
     expect(defaultErrorHandler.mock.calls.length).toBe(1);
   });
 
-  it('should config a web framework (support Websockets)', () => {
+  it('should configure a web framework (support Websockets)', () => {
     const server = createServer({ logger });
     const framework = createExpress({
       logger, server, routes: [{}], interceptors: [{}], supportWebsockets: true,
@@ -43,14 +47,14 @@ describe('Express Framework', () => {
     expect(expressWS.mock.calls[0][1]).toBe(server);
   });
 
-  it('should config a web framework (support Trust Proxy)', () => {
+  it('should configure a web framework (support Trust Proxy)', () => {
     const framework = createExpress({
       logger, routes: [{}], interceptors: [{}], supportTrustProxy: true,
     });
     expect(framework.get('trust proxy')).toBeTruthy();
   });
 
-  it('should config a web framework (without middleware)', () => {
+  it('should configure a web framework (without middleware)', () => {
     createExpress({
       logger, routes: null, interceptors: null, errorHandlers: null,
     });
@@ -59,13 +63,30 @@ describe('Express Framework', () => {
     expect(defaultErrorHandler.mock.calls.length).toBe(0);
   });
 
-  it('should config a web framework (without middleware) 2', () => {
+  it('should configure a web framework to capture invalid requests', () => {
     const framework = createExpress({
       logger, routes: null, interceptors: null,
     });
     expect(registerInterceptors.mock.calls.length).toBe(0);
     expect(registerRoutes.mock.calls.length).toBe(0);
     expect(defaultErrorHandler.mock.calls.length).toBe(1);
+
+    const req = request(framework);
+    return req.get('/not-found-resource')
+      .send()
+      .expect(404)
+      .then((res) => {
+        expect(res.body).toEqual({ error: 'Not Found' });
+      });
+  });
+
+  it('should configure a web framework to not capture invalid requests', () => {
+    const framework = createExpress({
+      logger, routes: null, interceptors: null, errorHandlers: null, catchInvalidRequest: false,
+    });
+    expect(registerInterceptors.mock.calls.length).toBe(0);
+    expect(registerRoutes.mock.calls.length).toBe(0);
+    expect(defaultErrorHandler.mock.calls.length).toBe(0);
 
     const req = request(framework);
     return req.get('/not-found-resource')

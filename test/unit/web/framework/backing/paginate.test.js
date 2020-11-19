@@ -28,7 +28,7 @@ describe('Express Framework - paginate', () => {
     [paginateMiddleware, paginateControlMiddleware] = paginate;
   });
 
-  describe('Express Framework - paginate - control', () => {
+  describe('middleware', () => {
     it('should inject paging control', () => {
       const req = mockRequest();
       const res = mockResponse();

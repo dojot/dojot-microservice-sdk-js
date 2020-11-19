@@ -7,6 +7,11 @@ better suits you. Having this in mind, a standard was developed for creating an
 instance of the framework _Express.js_ previously configured to meet the basic
 needs of the dojot platform services.
 
+To run the example:
+```shell
+docker-compose up
+```
+
 In order to create an instance of Express, we must provide a configuration
 object with specific attributes that will be detailed below.
 

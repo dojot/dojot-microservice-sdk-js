@@ -4,7 +4,7 @@ const expressWS = require('express-ws');
 const registerInterceptors = require('../../../../../lib/web/framework/backing/register-routes');
 const { Logger } = require('../../../../../lib/logging/Logger');
 
-const logger = new Logger();
+const logger = new Logger('Register routes');
 logger.debug = jest.fn();
 
 

@@ -72,7 +72,7 @@ function createModule(logger) {
             // The middleware supports async/await
             async (req, res) => {
               logger.info(`POST - ${req.id} - Connection received. IP:${req.connection.remoteAddress}. Body:`, req.body);
-              const json = await { result: 'POST - async/await - OK' };
+              const json = await Promise.resolve({ result: 'POST - async/await - OK' });
               res.status(200).json(json);
             },
           ],
@@ -94,7 +94,7 @@ function createModule(logger) {
               // if there is a valid 'tenant' in the JWT token, and to complete,
               // it defines the 'tenant' in the request object: ${req.tenant}
               logger.info(`PUT - ${req.id} - Intercepted tenant: ${req.tenant} - Connection received. IP:${req.connection.remoteAddress}`);
-              const json = await { result: 'PUT - async/await - OK' };
+              const json = await Promise.resolve({ result: 'PUT - async/await - OK' });
               res.status(200).json(json);
             },
           ],

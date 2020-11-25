@@ -5,7 +5,7 @@ jest.mock('express', () => {
 });
 
 const express = require('express');
-const registerInterceptors = require('../../../../../lib/web/framework/backing/register-interceptors');
+const registerInterceptors = require('../../../../../lib/web/framework/backing/registerInterceptors');
 const { Logger } = require('../../../../../lib/logging/Logger');
 
 const logger = new Logger('Register Interceptors');

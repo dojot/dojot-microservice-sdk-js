@@ -5,7 +5,7 @@ jest.mock('https', () => ({ createServer: jest.fn() }));
 const fs = require('fs');
 const http = require('http');
 const https = require('https');
-const createServer = require('../../../lib/web/server-factory');
+const createServer = require('../../../lib/web/createServer');
 const { Logger } = require('../../../lib/logging/Logger');
 
 const logger = new Logger('HTTP Server');

@@ -1,5 +1,5 @@
-const defaultErrorHandler = require('../../../../../lib/web/framework/backing/default-error-handler');
-const { Unauthorized, NotFound } = require('../../../../../lib/web/framework/backing/error-template');
+const defaultErrorHandler = require('../../../../../lib/web/framework/backing/defaultErrorHandler');
+const { Unauthorized, NotFound } = require('../../../../../lib/web/framework/backing/errorTemplate');
 const { Logger } = require('../../../../../lib/logging/Logger');
 
 const logger = new Logger('DefaultErrorHandler');

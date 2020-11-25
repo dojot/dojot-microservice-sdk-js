@@ -1,7 +1,7 @@
 const express = require('express');
 const expressWS = require('express-ws');
 
-const registerInterceptors = require('../../../../../lib/web/framework/backing/register-routes');
+const registerInterceptors = require('../../../../../lib/web/framework/backing/registerRoutes');
 const { Logger } = require('../../../../../lib/logging/Logger');
 
 const logger = new Logger('Register routes');

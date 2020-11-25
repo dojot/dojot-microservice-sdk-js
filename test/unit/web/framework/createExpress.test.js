@@ -1,7 +1,7 @@
 jest.mock('express-ws', () => jest.fn());
-jest.mock('../../../../lib/web/framework/backing/register-interceptors', () => jest.fn());
-jest.mock('../../../../lib/web/framework/backing/register-routes', () => jest.fn());
-jest.mock('../../../../lib/web/framework/backing/default-error-handler',
+jest.mock('../../../../lib/web/framework/backing/registerInterceptors', () => jest.fn());
+jest.mock('../../../../lib/web/framework/backing/registerRoutes', () => jest.fn());
+jest.mock('../../../../lib/web/framework/backing/defaultErrorHandler',
   () => jest.fn().mockImplementation(
     () => (err, req, res, next) => {
       res.status(404).json({ error: err.message });
@@ -11,9 +11,9 @@ jest.mock('../../../../lib/web/framework/backing/default-error-handler',
 
 const request = require('supertest');
 const expressWS = require('express-ws');
-const registerInterceptors = require('../../../../lib/web/framework/backing/register-interceptors');
-const registerRoutes = require('../../../../lib/web/framework/backing/register-routes');
-const defaultErrorHandler = require('../../../../lib/web/framework/backing/default-error-handler');
+const registerInterceptors = require('../../../../lib/web/framework/backing/registerInterceptors');
+const registerRoutes = require('../../../../lib/web/framework/backing/registerRoutes');
+const defaultErrorHandler = require('../../../../lib/web/framework/backing/defaultErrorHandler');
 
 const { createServer, framework: { createExpress } } = require('../../../../lib/web');
 const { Logger } = require('../../../../lib/logging/Logger');

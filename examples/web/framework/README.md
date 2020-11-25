@@ -84,7 +84,7 @@ const routePattern = {
 const routes = [ routePattern ];
 ```
 
-The `route.params` and `.route.handlers` objects are better detailed
+The `route.params` and `route.handlers` objects are better detailed
 below:
 
 ```javascript

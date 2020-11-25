@@ -7,10 +7,10 @@ const { Logger } = require('@dojot/microservice-sdk');
 Logger.setTransport('console', { level: 'debug' });
 const logger = new Logger(process.env.LOG_LABEL);
 
-// Path to the x509 certificate issued to the server
+// Path to the x509 certificate issued to the client
 const cert = process.env.CLIENT_CERT;
 
-// Path to the server certificate private key
+// Path to the client certificate private key
 const key = process.env.CLIENT_CERT_KEY;
 
 // CA certificate that the client trusts.

@@ -14,7 +14,15 @@ RUN apk --no-cache add \
     python
 
 
-RUN apk add --no-cache --virtual .build-deps gcc zlib-dev libc-dev bsd-compat-headers py-setuptools bash
+RUN apk add \
+    --no-cache \
+    --virtual \
+    .build-deps \
+    gcc \
+    zlib-dev \
+    libc-dev \
+    bsd-compat-headers \
+    py-setuptools bash
 
 # library (essential files)
 COPY package.json microservice-sdk-pkg/

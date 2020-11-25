@@ -207,7 +207,7 @@ describe('Express Framework - Register routes', () => {
     const route = {
       name: 'a custom route',
       mountPoint: '/mnt',
-      path: '/custom-path', // path is not a array!
+      path: '/custom-path', // path is not an array!
       params: [],
       handlers: [{
         method: 'get',
@@ -236,7 +236,7 @@ describe('Express Framework - Register routes', () => {
           req.params[param] = value.toUpperCase();
           next();
         },
-      }, // params is not a array (but an object)!
+      }, // params is not an array (but an object)!
       handlers: [{
         method: 'get',
         middleware: [
@@ -264,7 +264,7 @@ describe('Express Framework - Register routes', () => {
         middleware: [
           (req, res, next) => { next(); },
         ],
-      }, // params is not a array (but an object)!
+      }, // params is not an array (but an object)!
     };
 
     const framework = express();

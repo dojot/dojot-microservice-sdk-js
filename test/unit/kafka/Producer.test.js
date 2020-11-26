@@ -31,7 +31,7 @@ describe('Kafka producer', () => {
   };
   const mockKafka = {
     producer: {
-      connect: jest.fn(),
+      connect: jest.fn((metadata, callback) => callback()),
       disconnect: jest.fn(),
       flush: jest.fn(),
       on: jest.fn(),
@@ -42,6 +42,7 @@ describe('Kafka producer', () => {
   };
 
   beforeAll(() => {
+    jest.clearAllMocks();
     Kafka.Producer.mockImplementation(() => mockKafka.producer);
   });
 
@@ -66,6 +67,14 @@ describe('Kafka producer', () => {
   });
 
   describe('Producer creation', () => {
+    it('Should create a producer connection and fail to produce', () => {
+      const producer = new Producer();
+      producer.connect();
+
+      producer.isReady = false;
+      expect(producer.produce()).rejects.toThrow();
+    });
+
     it('should successfully create a Kafka producer', () => {
       /**
        * This test will check if a producer can be successfully created.

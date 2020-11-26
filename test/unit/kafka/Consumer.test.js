@@ -61,6 +61,7 @@ KafkaMock.KafkaConsumer = class {
     this.resume = jest.fn();
     this.assignments = jest.fn();
     this.unassign = jest.fn();
+    this.disconnect = jest.fn((cb) => cb());
   }
 };
 
@@ -190,6 +191,44 @@ test('Failed initialization', async () => {
 
   expect(consumer.isReady).toBe(false);
 });
+
+test('Finish - succeed even when the consumer is not ready', async () => {
+  const consumer = new Consumer();
+  consumer.consumer = new KafkaMock.KafkaConsumer();
+
+  await consumer.finish();
+  expect(consumer.consumer.unsubscribe).not.toHaveBeenCalled();
+  expect(consumer.consumer.disconnect).not.toHaveBeenCalled();
+});
+
+test('Finish - success', (done) => {
+  const consumer = new Consumer();
+  consumer.consumer = new KafkaMock.KafkaConsumer();
+
+  consumer.init();
+  consumer.isReady = true;
+
+
+  consumer.commitManager = new CommitManagerMock();
+  consumer.commitManager.finish = jest.fn(() => Promise.resolve());
+
+
+  const callbackPromiseDisconnect = new Promise((resolve) => {
+    const mockDisconnectedEvent = consumer.consumer.on.mock.calls[3][1];
+    mockDisconnectedEvent();
+    // set to ready again to test finish func
+    consumer.isReady = true;
+    resolve();
+  });
+
+  const consumerFinishPromise = consumer.finish();
+
+  Promise.all([callbackPromiseDisconnect, consumerFinishPromise]).then(() => {
+    expect(consumer.isReady).toBeFalsy();
+    done();
+  }).catch(done.fail);
+});
+
 
 describe('Validates registerCallback', () => {
   it('using explicit topic', () => {

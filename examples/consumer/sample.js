@@ -22,6 +22,15 @@ const consumer = new Consumer({
   },
 });
 
+let getStatusInterval = null;
+const getStatusFunc = () => {
+  consumer.getStatus().then((value) => {
+    logger.info(`Status: ${util.inspect(value)}`);
+  }).catch((err) => {
+    logger.error(`${err}`);
+  });
+};
+
 consumer.init().then(() => {
   logger.info('Application is ready to receive messages from kafka!');
   // the target kafka topic, it could be a String or a RegExp
@@ -30,19 +39,20 @@ consumer.init().then(() => {
   /**
    * retrieve the status
    */
-  setInterval(() => {
-    consumer.getStatus().then((value) => {
-      logger.info(`Status: ${util.inspect(value)}`);
-    }).catch((err) => {
-      logger.error(`${err}`);
-    });
-  }, 5000);
+  getStatusInterval = setInterval(getStatusFunc, 5000);
 
   // Register callback to process incoming device data
   /* const idCallback = */ consumer.registerCallback(targetTopic, (data) => {
     const { value: payload } = data;
     logger.debug(`Payload: ${payload.toString()}`);
   });
+
+
+  // this example runs for 30 seconds after that, finish the consumer
+  setTimeout(async () => {
+    clearInterval(getStatusInterval);
+    await consumer.finish();
+  }, 30000);
 }).catch((error) => {
   logger.error(`Caught an error: ${error.stack || error}`);
 });

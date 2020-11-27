@@ -34,7 +34,7 @@ COPY index.js microservice-sdk-pkg/
 COPY examples/webUtils/https/mutual-tls/client/package*.json ./
 COPY examples/webUtils/https/mutual-tls/client/index.js ./
 
-RUN npm install
+RUN npm install --production
 
 FROM node:12.18.4-alpine
 

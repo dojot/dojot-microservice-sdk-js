@@ -35,7 +35,7 @@ COPY examples/webUtils/framework/server/package*.json ./
 COPY examples/webUtils/framework/server/index.js ./
 COPY examples/webUtils/framework/server/backing.js ./
 
-RUN npm install
+RUN npm install --production
 
 FROM node:12.18.4-alpine
 

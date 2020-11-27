@@ -34,7 +34,7 @@ COPY index.js microservice-sdk-pkg/
 COPY examples/webUtils/framework/client/package*.json ./
 COPY examples/webUtils/framework/client/index.js ./
 
-RUN npm install
+RUN npm install --production
 
 FROM node:12.18.4-alpine
 

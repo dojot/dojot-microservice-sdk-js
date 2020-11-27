@@ -35,7 +35,7 @@ COPY examples/webUtils/https/simple-tls/server/package*.json ./
 COPY examples/webUtils/https/simple-tls/server/index.js ./
 COPY examples/webUtils/https/simple-tls/server/tls ./tls
 
-RUN npm install
+RUN npm install --production
 
 FROM node:12.18.4-alpine
 

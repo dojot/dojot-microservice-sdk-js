@@ -13,10 +13,11 @@ attend the dojot microservices necessities.
   - [Kafka Handlers](https://github.com/dojot/dojot-microservice-sdk-js/blob/master/lib/kafka/README.md)
   - [Logger](https://github.com/dojot/dojot-microservice-sdk-js/blob/master/lib/logging/README.md)
   - [Service State Manager](https://github.com/dojot/dojot-microservice-sdk-js/blob/master/lib/serviceStateManager/README.md)
+  - [Backend Web Utils](https://github.com/dojot/dojot-microservice-sdk-js/blob/master/lib/webUtils/README.md)
 - Examples
   - [Configuration Manager](https://github.com/dojot/dojot-microservice-sdk-js/blob/master/examples/configManager/README.md)
   - [Kafka's Consumer](https://github.com/dojot/dojot-microservice-sdk-js/blob/master/examples/consumer/README.md)
   - [Kafka's Producer](https://github.com/dojot/dojot-microservice-sdk-js/blob/master/examples/producer/README.md)
   - [Logger](https://github.com/dojot/dojot-microservice-sdk-js/blob/master/examples/logging/README.md)
   - [Service State Manager](https://github.com/dojot/dojot-microservice-sdk-js/blob/master/examples/serviceStateManager/README.md)
-  - [Backend web utils](https://github.com/dojot/dojot-microservice-sdk-js/blob/master/examples/web/README.md)
+  - [Backend Web Utils](https://github.com/dojot/dojot-microservice-sdk-js/blob/master/examples/webUtils/README.md)

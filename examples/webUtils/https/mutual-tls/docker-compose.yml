@@ -1,0 +1,53 @@
+version: '3.8'
+services:
+  server:
+    build:
+      context: ./../../../../
+      dockerfile: ./examples/webUtils/https/mutual-tls/server/Dockerfile
+    environment:
+      LOG_LABEL: HTTPS Server Example
+      SERVER_CERT: ./tls/server.crt
+      SERVER_CERT_KEY: ./tls/server.key
+      CLIENT_CA_CERT: ./tls/client1-ca.crt,./tls/client2-ca.crt
+    volumes:
+      - ./tls:/opt/example/tls
+    logging:
+      driver: json-file
+      options:
+        max-size: 100m
+
+  client1:
+    build:
+      context: ./../../../../
+      dockerfile: ./examples/webUtils/https/mutual-tls/client/Dockerfile
+    environment:
+      LOG_LABEL: Client-1 Example
+      CLIENT_CERT: ./tls/client1.crt
+      CLIENT_CERT_KEY: ./tls/client1.key
+      SERVER_CA_CERT: ./tls/server-ca.crt
+    volumes:
+      - ./tls:/opt/example/tls
+    depends_on:
+        - server
+    logging:
+      driver: json-file
+      options:
+        max-size: 100m
+
+  client2:
+    build:
+      context: ./../../../../
+      dockerfile: ./examples/webUtils/https/mutual-tls/client/Dockerfile
+    environment:
+      LOG_LABEL: Client-2 Example
+      CLIENT_CERT: ./tls/client2.crt
+      CLIENT_CERT_KEY: ./tls/client2.key
+      SERVER_CA_CERT: ./tls/server-ca.crt
+    volumes:
+      - ./tls:/opt/example/tls
+    depends_on:
+        - server
+    logging:
+      driver: json-file
+      options:
+        max-size: 100m

@@ -14,7 +14,13 @@
     "shutdown"
   ],
   "author": "Eduardo Garcia Misiuk",
-  "license": "GPL-3.0",
+  "license": "Apache-2.0",
+  "licenses": [
+    {
+      "type": "Apache-2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0"
+    }
+  ],
   "dependencies": {
     "@dojot/microservice-sdk": "file:./microservice-sdk-pkg",
     "express": "^4.17.1",

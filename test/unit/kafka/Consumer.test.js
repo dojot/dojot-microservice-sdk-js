@@ -534,16 +534,14 @@ describe('handle kafka (Processing Retry and Not Commit on Failure)', () => {
       timestamp: 1510325354780, // timestamp of message creation
     };
 
-    consumer.topicRegExpArray[0].callback =
-    jest
+    consumer.topicRegExpArray[0].callback = jest
     .fn()
     .mockImplementationOnce(() => {
       throw new Error();
     })
     .mockImplementationOnce();
 
-    consumer.topicMap[publishedData.topic][0].callback =
-    jest
+    consumer.topicMap[publishedData.topic][0].callback = jest
     .fn()
     .mockImplementationOnce(() => {
       throw new Error();
@@ -570,8 +568,7 @@ describe('handle kafka (Processing Retry and Not Commit on Failure)', () => {
       timestamp: 1510325354780, // timestamp of message creation
     };
 
-    consumer.topicRegExpArray[0].callback =
-    jest
+    consumer.topicRegExpArray[0].callback = jest
     .fn()
     .mockImplementationOnce(() => {
       throw new Error();
@@ -581,8 +578,7 @@ describe('handle kafka (Processing Retry and Not Commit on Failure)', () => {
     })
     .mockImplementationOnce();
 
-    consumer.topicMap[publishedData.topic][0].callback =
-    jest
+    consumer.topicMap[publishedData.topic][0].callback = jest
     .fn()
     .mockImplementationOnce(() => {
       throw new Error();
@@ -612,15 +608,13 @@ describe('handle kafka (Processing Retry and Not Commit on Failure)', () => {
       timestamp: 1510325354780, // timestamp of message creation
     };
 
-    consumer.topicRegExpArray[0].callback =
-    jest
+    consumer.topicRegExpArray[0].callback = jest
     .fn()
     .mockImplementation(() => {
       throw new Error();
     });
 
-    consumer.topicMap[publishedData.topic][0].callback =
-    jest
+    consumer.topicMap[publishedData.topic][0].callback = jest
     .fn()
     .mockImplementation(() => {
       throw new Error();

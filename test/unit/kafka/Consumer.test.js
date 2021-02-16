@@ -510,16 +510,18 @@ describe('handle kafka (Processing Retry and Not Commit on Failure)', () => {
   let consumer = null;
   beforeEach(() => {
     consumer = new Consumer({
-      "max.retries.processing.callbacks": 2,
-      "commit.on.failure": false, });
+      'max.retries.processing.callbacks': 2,
+      'commit.on.failure': false,
+    });
     consumer.commitManager = new CommitManagerMock();
     consumer.topicRegExpArray = [
-      { id: 'entry1',
-        regExp: /^user\/.*/
+      {
+        id: 'entry1',
+        regExp: /^user\/.*/,
       },
     ];
     consumer.topicMap['user/juri'] = [
-      { id: 'entry2' }
+      { id: 'entry2' },
     ];
   });
 
@@ -534,21 +536,19 @@ describe('handle kafka (Processing Retry and Not Commit on Failure)', () => {
       timestamp: 1510325354780, // timestamp of message creation
     };
 
-    consumer.topicRegExpArray[0].callback =
-    jest
-    .fn()
-    .mockImplementationOnce(() => {
-      throw new Error();
-    })
-    .mockImplementationOnce();
+    consumer.topicRegExpArray[0].callback = jest
+      .fn()
+      .mockImplementationOnce(() => {
+        throw new Error();
+      })
+      .mockImplementationOnce();
 
-    consumer.topicMap[publishedData.topic][0].callback =
-    jest
-    .fn()
-    .mockImplementationOnce(() => {
-      throw new Error();
-    })
-    .mockImplementationOnce();
+    consumer.topicMap[publishedData.topic][0].callback = jest
+      .fn()
+      .mockImplementationOnce(() => {
+        throw new Error();
+      })
+      .mockImplementationOnce();
 
     consumer.invokeInterestedCallbacks(publishedData);
 
@@ -570,27 +570,25 @@ describe('handle kafka (Processing Retry and Not Commit on Failure)', () => {
       timestamp: 1510325354780, // timestamp of message creation
     };
 
-    consumer.topicRegExpArray[0].callback =
-    jest
-    .fn()
-    .mockImplementationOnce(() => {
-      throw new Error();
-    })
-    .mockImplementationOnce(() => {
-      throw new Error();
-    })
-    .mockImplementationOnce();
+    consumer.topicRegExpArray[0].callback = jest
+      .fn()
+      .mockImplementationOnce(() => {
+        throw new Error();
+      })
+      .mockImplementationOnce(() => {
+        throw new Error();
+      })
+      .mockImplementationOnce();
 
-    consumer.topicMap[publishedData.topic][0].callback =
-    jest
-    .fn()
-    .mockImplementationOnce(() => {
-      throw new Error();
-    })
-    .mockImplementationOnce(() => {
-      throw new Error();
-    })
-    .mockImplementationOnce();
+    consumer.topicMap[publishedData.topic][0].callback = jest
+      .fn()
+      .mockImplementationOnce(() => {
+        throw new Error();
+      })
+      .mockImplementationOnce(() => {
+        throw new Error();
+      })
+      .mockImplementationOnce();
 
     consumer.invokeInterestedCallbacks(publishedData);
 
@@ -612,19 +610,17 @@ describe('handle kafka (Processing Retry and Not Commit on Failure)', () => {
       timestamp: 1510325354780, // timestamp of message creation
     };
 
-    consumer.topicRegExpArray[0].callback =
-    jest
-    .fn()
-    .mockImplementation(() => {
-      throw new Error();
-    });
+    consumer.topicRegExpArray[0].callback = jest
+      .fn()
+      .mockImplementation(() => {
+        throw new Error();
+      });
 
-    consumer.topicMap[publishedData.topic][0].callback =
-    jest
-    .fn()
-    .mockImplementation(() => {
-      throw new Error();
-    });
+    consumer.topicMap[publishedData.topic][0].callback = jest
+      .fn()
+      .mockImplementation(() => {
+        throw new Error();
+      });
 
     const errorHandler = jest.fn();
     consumer.on('error.processing', errorHandler);

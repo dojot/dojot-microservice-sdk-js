@@ -23,17 +23,17 @@ const consumer = new Consumer({
 });
 
 consumer.on('ready',
-() => logger.info('Received ready event'));
+  () => logger.info('Received ready event'));
 consumer.on('disconnected',
-() => logger.info('Received disconnected event'));
+  () => logger.info('Received disconnected event'));
 consumer.on('paused',
-() => logger.info('Received paused event'));
+  () => logger.info('Received paused event'));
 consumer.on('resumed',
-() => logger.info('Received resumed event'));
+  () => logger.info('Received resumed event'));
 consumer.on('error.connecting',
-() => logger.info('Received error.connecting event'));
+  () => logger.info('Received error.connecting event'));
 consumer.on('error.processing',
-() => logger.info('Received error.processing event'));
+  () => logger.info('Received error.processing event'));
 
 let getStatusInterval = null;
 const getStatusFunc = () => {

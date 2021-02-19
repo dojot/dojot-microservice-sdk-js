@@ -31,7 +31,7 @@ consumer.on('disconnected', () => console.log('Received disconnected event'));
 consumer.on('paused', () => console.log('Received paused event'));
 consumer.on('resumed', () => console.log('Received resumed event'));
 consumer.on('error.connecting', () => console.log('Received error.connecting event'));
-consumer.on('error.processing', () => console.log('Received error.processing event'));
+consumer.on('error.processing', (cbId, data) => console.log(`Received error.processing event (cbId: ${cbId}: data: ${JSON.stringfy(data)}`));
 
 consumer.init().then(() => {
     // the target kafka topic, it could be a String or a RegExp

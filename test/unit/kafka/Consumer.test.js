@@ -636,6 +636,7 @@ describe('handle kafka (Processing Retry and Not Commit on Failure)', () => {
     expect(consumer.commitManager.notifyFinishedProcessing).not.toHaveBeenCalled();
     expect(consumer.finish).toHaveBeenCalled();
     expect(errorHandler).toHaveBeenCalled();
+    expect(errorHandler).toHaveBeenCalledWith(consumer.topicRegExpArray[0].id, publishedData);
   });
 });
 

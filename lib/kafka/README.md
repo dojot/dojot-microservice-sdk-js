@@ -11,7 +11,7 @@ node-rdkafka Consumer and provides the following additional features:
 
 * a backpressure mechanism to control the consumption of messages from kafka according to the processing ratio. If messages are consumed at a higher rate than they are processed, consumption is stopped until messages already consumed are processed;
 
-* a commit management that ensures that all messages are processed at least once. A message is considered processed after all registered callbacks for it finishes.
+* a commit management that ensures that all messages are processed at least once. A message is considered processed after all registered callbacks for it have finished successfuly. Nevertheless, if some of the registered callbacks throws an Error, there will be two possibilities. The first one, which is the default, the message will be considered discarded by the callback and will be committed on Kafka. The second one, the message will be considered unprocessed and the consumer will be finished up. In both cases, an 'error.processing' event is emitted. It is also possible to set a maximum number of retries to failed callbacks. Once the consumer is finished, the application will need to instantiate a new one which will start consuming from the last unprocessed message.
 
 The following example illustrates how to use the Consumer:
 
@@ -24,6 +24,14 @@ const consumer = new Consumer({
     'metadata.broker.list': 'localhost:9092',
   }
 });
+
+// register on consumer's events
+consumer.on('ready', () => console.log('Received ready event'));
+consumer.on('disconnected', () => console.log('Received disconnected event'));
+consumer.on('paused', () => console.log('Received paused event'));
+consumer.on('resumed', () => console.log('Received resumed event'));
+consumer.on('error.connecting', () => console.log('Received error.connecting event'));
+consumer.on('error.processing', (cbId, data) => console.log(`Received error.processing event (cbId: ${cbId}: data: ${JSON.stringfy(data)}`));
 
 consumer.init().then(() => {
     // the target kafka topic, it could be a String or a RegExp
@@ -47,11 +55,15 @@ The following properties can be set for the Consumer:
 |Property|Description|
 |-------|----------|
 |in.processing.max.messages|The maximum number of messages being processed simultaneously. The processing callbacks are called in order but there is no guarantee regarding to the order of completion. Default value is 1.|
+|max.retries.processing.callbacks|The maximum number of times a processing
+callback is called if it fails. Default value is 0.|
+|commit.on.failure|True whether a message should be committed even if any of its
+processing callback has failed; false, otherwise. Default value is true.|
 |queued.max.messages.bytes|The maximum amount (in bytes) of queued messages waiting for being processed. The same queue is shared by all callbacks. Default value is 10485760.|
 |subscription.backoff.min.ms|The initial backoff time (in milliseconds) for subscribing to topics in Kafka. Every time a callback is registered for a new topic, the subscriptions are updated to include this new one. Default value is 1000.|
 |subscription.backoff.max.ms|The maximum value for the backoff time (in milliseconds). The backoff time is incremented while it is above this value. Default value is 60000.|
 |subscription.backoff.delta.ms|The value that will be used for calculating a random delta time (in milliseconds) in the exponential delay between retries. Default value is 1000.|
-|commit.interval.ms|Time interval (in milliseconds) for committing the processed messages into kafka. A message is committed if and only if all previous messages has been processed. Default value is 5000.|
+|commit.interval.ms|Time interval (in milliseconds) for committing the processed messages on kafka. A message is committed if and only if all previous messages has been processed. Default value is 5000.|
 |kafka.consumer| An object with global properties for the node-rdkafka consumer. For a full list of properties, see: https:/  /github.com/edenhill/librdkafka/blob/master/CONFIGURATION.md#global-configuration-properties.|
 |kafka.topic| An object with specific topic configuration properties that applies to all topics the node-rdkafka consumer subscribes to. For a full list of properties, see: https://github.com/edenhill/librdkafka/blob/master/CONFIGURATION.md#topic-configuration-properties.|
 

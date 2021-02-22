@@ -61,7 +61,10 @@ KafkaMock.KafkaConsumer = class {
     this.resume = jest.fn();
     this.assignments = jest.fn();
     this.unassign = jest.fn();
-    this.disconnect = jest.fn((cb) => cb());
+    this.disconnect = jest.fn((cb) => {
+      this.eventListener.disconnected();
+      cb();
+    });
   }
 };
 
@@ -86,11 +89,13 @@ test('Constructor: default', () => {
   const consumer = new Consumer();
   const expectedConfig = {
     'in.processing.max.messages': 1,
+    'max.retries.processing.callbacks': 0,
     'queued.max.messages.bytes': 10485760,
     'subscription.backoff.min.ms': 1000,
     'subscription.backoff.max.ms': 60000,
     'subscription.backoff.delta.ms': 1000,
     'commit.interval.ms': 5000,
+    'commit.on.failure': true,
     'kafka.consumer': {
       'enable.auto.commit': false,
     },
@@ -108,11 +113,13 @@ test('Constructor: divergent value for enable.auto.commit', () => {
   const consumer = new Consumer({ 'kafka.consumer': { 'enable.auto.commit': true } });
   const expectedConfig = {
     'in.processing.max.messages': 1,
+    'max.retries.processing.callbacks': 0,
     'queued.max.messages.bytes': 10485760,
     'subscription.backoff.min.ms': 1000,
     'subscription.backoff.max.ms': 60000,
     'subscription.backoff.delta.ms': 1000,
     'commit.interval.ms': 5000,
+    'commit.on.failure': true,
     'kafka.consumer': {
       'enable.auto.commit': false, // it must be disabled!
     },
@@ -138,11 +145,13 @@ test('Constructor: consumer and topic properties', () => {
   });
   const expectedConfig = {
     'in.processing.max.messages': 1,
+    'max.retries.processing.callbacks': 0,
     'queued.max.messages.bytes': 10485760,
     'subscription.backoff.min.ms': 1000,
     'subscription.backoff.max.ms': 60000,
     'subscription.backoff.delta.ms': 1000,
     'commit.interval.ms': 5000,
+    'commit.on.failure': true,
     'kafka.consumer': {
       'bootstrap.servers': ['kafka.server1', 'kafka.server2'],
     },
@@ -161,10 +170,13 @@ test('Constructor: consumer and topic properties', () => {
 test('Basic initialization', async () => {
   const consumer = new Consumer();
   consumer.refreshSubscriptions = jest.fn();
+  const readyHandler = jest.fn();
+  consumer.on('ready', readyHandler);
   await consumer.init();
 
   // check init behavior
   expect(consumer.isReady).toBe(true);
+  expect(readyHandler).toHaveBeenCalled();
   expect(consumer.consumer.consume).toHaveBeenCalled();
   expect(consumer.refreshSubscriptions).toHaveBeenCalledTimes(1);
 });
@@ -177,11 +189,13 @@ test('Get consumer status', async () => {
 });
 
 test('Failed initialization', async () => {
-  expect.assertions(2);
+  expect.assertions(3);
   const consumer = new Consumer();
   consumer.consumer.connect = jest.fn((_unused, callback) => {
     callback(new Error('The kafka broker is not reachable.'));
   });
+  const readyHandler = jest.fn();
+  consumer.on('ready', readyHandler);
 
   try {
     await consumer.init();
@@ -190,20 +204,27 @@ test('Failed initialization', async () => {
   }
 
   expect(consumer.isReady).toBe(false);
+  expect(readyHandler).not.toHaveBeenCalled();
 });
 
 test('Finish - succeed even when the consumer is not ready', async () => {
   const consumer = new Consumer();
   consumer.consumer = new KafkaMock.KafkaConsumer();
+  const disconnectedHandler = jest.fn();
+  consumer.on('disconnected', disconnectedHandler);
 
   await consumer.finish();
   expect(consumer.consumer.unsubscribe).not.toHaveBeenCalled();
   expect(consumer.consumer.disconnect).not.toHaveBeenCalled();
+  expect(disconnectedHandler).not.toHaveBeenCalled();
 });
 
 test('Finish - success', (done) => {
   const consumer = new Consumer();
   consumer.consumer = new KafkaMock.KafkaConsumer();
+  const disconnectedHandler = jest.fn();
+  consumer.on('disconnected', disconnectedHandler);
+
 
   consumer.init();
   consumer.isReady = true;
@@ -227,6 +248,8 @@ test('Finish - success', (done) => {
     expect(consumer.isReady).toBeFalsy();
     done();
   }).catch(done.fail);
+
+  expect(disconnectedHandler).toHaveBeenCalled();
 });
 
 
@@ -379,6 +402,8 @@ describe('Message processing', () => {
     consumer.commitManager = new CommitManagerMock();
     consumer.msgQueue = AsyncMock.queue(jest.fn());
     consumer.consumer = new KafkaMock.KafkaConsumer();
+    const pausedHandler = jest.fn();
+    consumer.on('paused', pausedHandler);
 
     const publishedData = {
       value: Buffer.from('konnichiwa'), // message contents as a Buffer
@@ -395,10 +420,11 @@ describe('Message processing', () => {
     expect(consumer.msgQueue.length()).toBe(1);
     expect(consumer.consumer.pause).toHaveBeenCalledTimes(1);
     expect(consumer.isPaused).toBeTruthy();
+    expect(pausedHandler).toHaveBeenCalled();
   });
 });
 
-describe('handle kafka', () => {
+describe('handle kafka (Default Consumer)', () => {
   let consumer = null;
   beforeEach(() => {
     consumer = new Consumer({});
@@ -477,6 +503,140 @@ describe('handle kafka', () => {
     expect(consumer.topicMap[publishedData.topic][1].callback).toHaveBeenCalledTimes(1);
 
     expect(consumer.commitManager.notifyFinishedProcessing).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('handle kafka (Processing Retry and Not Commit on Failure)', () => {
+  let consumer = null;
+  beforeEach(() => {
+    consumer = new Consumer({
+      'max.retries.processing.callbacks': 2,
+      'commit.on.failure': false,
+    });
+    consumer.commitManager = new CommitManagerMock();
+    consumer.topicRegExpArray = [
+      {
+        id: 'entry1',
+        regExp: /^user\/.*/,
+      },
+    ];
+    consumer.topicMap['user/juri'] = [
+      { id: 'entry2' },
+    ];
+  });
+
+  test('Message processing that succeeds in the first retry', async () => {
+    const publishedData = {
+      value: Buffer.from('konnichiwa'), // message contents as a Buffer
+      size: 10, // size of the message, in bytes
+      topic: 'user/juri', // topic the message comes from
+      offset: 1337, // offset the message was read from
+      partition: 1, // partition the message was on
+      key: 'someKey', // key of the message if present
+      timestamp: 1510325354780, // timestamp of message creation
+    };
+
+    consumer.topicRegExpArray[0].callback = jest
+      .fn()
+      .mockImplementationOnce(() => {
+        throw new Error();
+      })
+      .mockImplementationOnce();
+
+    consumer.topicMap[publishedData.topic][0].callback = jest
+      .fn()
+      .mockImplementationOnce(() => {
+        throw new Error();
+      })
+      .mockImplementationOnce();
+
+    consumer.invokeInterestedCallbacks(publishedData);
+
+    expect(consumer.topicRegExpArray[0].callback).toHaveBeenCalledWith(publishedData);
+    expect(consumer.topicRegExpArray[0].callback).toHaveBeenCalledTimes(2);
+    expect(consumer.topicMap[publishedData.topic][0].callback).toHaveBeenCalledWith(publishedData);
+    expect(consumer.topicMap[publishedData.topic][0].callback).toHaveBeenCalledTimes(2);
+    expect(consumer.commitManager.notifyFinishedProcessing).toHaveBeenCalledTimes(1);
+  });
+
+  test('Message processing that succeeds in the second retry', async () => {
+    const publishedData = {
+      value: Buffer.from('konnichiwa'), // message contents as a Buffer
+      size: 10, // size of the message, in bytes
+      topic: 'user/juri', // topic the message comes from
+      offset: 1337, // offset the message was read from
+      partition: 1, // partition the message was on
+      key: 'someKey', // key of the message if present
+      timestamp: 1510325354780, // timestamp of message creation
+    };
+
+    consumer.topicRegExpArray[0].callback = jest
+      .fn()
+      .mockImplementationOnce(() => {
+        throw new Error();
+      })
+      .mockImplementationOnce(() => {
+        throw new Error();
+      })
+      .mockImplementationOnce();
+
+    consumer.topicMap[publishedData.topic][0].callback = jest
+      .fn()
+      .mockImplementationOnce(() => {
+        throw new Error();
+      })
+      .mockImplementationOnce(() => {
+        throw new Error();
+      })
+      .mockImplementationOnce();
+
+    consumer.invokeInterestedCallbacks(publishedData);
+
+    expect(consumer.topicRegExpArray[0].callback).toHaveBeenCalledWith(publishedData);
+    expect(consumer.topicRegExpArray[0].callback).toHaveBeenCalledTimes(3);
+    expect(consumer.topicMap[publishedData.topic][0].callback).toHaveBeenCalledWith(publishedData);
+    expect(consumer.topicMap[publishedData.topic][0].callback).toHaveBeenCalledTimes(3);
+    expect(consumer.commitManager.notifyFinishedProcessing).toHaveBeenCalledTimes(1);
+  });
+
+  test('Message processing that fails in all retries', async () => {
+    const publishedData = {
+      value: Buffer.from('konnichiwa'), // message contents as a Buffer
+      size: 10, // size of the message, in bytes
+      topic: 'user/juri', // topic the message comes from
+      offset: 1337, // offset the message was read from
+      partition: 1, // partition the message was on
+      key: 'someKey', // key of the message if present
+      timestamp: 1510325354780, // timestamp of message creation
+    };
+
+    consumer.topicRegExpArray[0].callback = jest
+      .fn()
+      .mockImplementation(() => {
+        throw new Error();
+      });
+
+    consumer.topicMap[publishedData.topic][0].callback = jest
+      .fn()
+      .mockImplementation(() => {
+        throw new Error();
+      });
+
+    const errorHandler = jest.fn();
+    consumer.on('error.processing', errorHandler);
+
+    consumer.finish = jest.fn();
+
+    consumer.invokeInterestedCallbacks(publishedData);
+
+    expect(consumer.topicRegExpArray[0].callback).toHaveBeenCalledWith(publishedData);
+    expect(consumer.topicRegExpArray[0].callback).toHaveBeenCalledTimes(3);
+    expect(consumer.topicMap[publishedData.topic][0].callback).toHaveBeenCalledWith(publishedData);
+    expect(consumer.topicMap[publishedData.topic][0].callback).toHaveBeenCalledTimes(3);
+    expect(consumer.commitManager.notifyFinishedProcessing).not.toHaveBeenCalled();
+    expect(consumer.finish).toHaveBeenCalled();
+    expect(errorHandler).toHaveBeenCalled();
+    expect(errorHandler).toHaveBeenCalledWith(consumer.topicRegExpArray[0].id, publishedData);
   });
 });
 
@@ -596,20 +756,28 @@ describe('Resume consumer', () => {
     consumer.isPaused = true;
     consumer.consumer = new KafkaMock.KafkaConsumer();
 
+    const resumedHandler = jest.fn();
+    consumer.on('resumed', resumedHandler);
+
     consumer.resumeConsumer();
 
     expect(consumer.consumer.resume).toHaveBeenCalledTimes(1);
     expect(consumer.isPaused).toBeFalsy();
+    expect(resumedHandler).toHaveBeenCalledTimes(1);
   });
 
   it('when is not paused', () => {
     const consumer = new Consumer({});
     consumer.consumer = new KafkaMock.KafkaConsumer();
 
+    const resumedHandler = jest.fn();
+    consumer.on('resumed', resumedHandler);
+
     consumer.resumeConsumer();
 
     expect(consumer.consumer.resume).toHaveBeenCalledTimes(0);
     expect(consumer.isPaused).toBeFalsy();
+    expect(resumedHandler).not.toHaveBeenCalled();
   });
 });
 

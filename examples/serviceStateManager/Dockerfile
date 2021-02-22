@@ -1,5 +1,8 @@
 FROM node:12.18.4-alpine AS base
 
+ARG HEALTH_PORT=9000
+ENV HEALTH_PORT_ENV=${HEALTH_PORT}
+
 WORKDIR /opt/example
 
 RUN apk --no-cache add \
@@ -40,4 +43,4 @@ COPY --from=base /opt/example .
 CMD ["node", "app/index.js"]
 
 HEALTHCHECK --start-period=2m --interval=30s --timeout=10s --retries=3 \
-    CMD curl -f http://localhost:9000/health || exit 1
+    CMD curl -f http://localhost:${HEALTH_PORT_ENV}/health || exit 1

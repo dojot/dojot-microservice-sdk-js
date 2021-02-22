@@ -1,5 +1,6 @@
 FROM node:12.18.4-alpine AS base
 
+#If the Service State Manager (lightship) default port is changed, it is necessary to reflect that change here
 ARG HEALTH_PORT=9000
 ENV HEALTH_PORT_ENV=${HEALTH_PORT}
 

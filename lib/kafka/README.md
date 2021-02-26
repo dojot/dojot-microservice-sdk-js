@@ -4,16 +4,25 @@ The Kafka module provides a high-level abstraction for Kafka Producers and Consu
 
 # Consumer
 
-To read messages from Kafka, you use the Consumer class, which is a wrapper over the
-node-rdkafka Consumer and provides the following additional features:
+To read messages from Kafka, you use the Consumer class, which is a wrapper over the node-rdkafka Consumer and provides the following additional features:
 
 * a register callback system with allows multiple callbacks to be registered for processing the same message;
 
 * a backpressure mechanism to control the consumption of messages from kafka according to the processing ratio. If messages are consumed at a higher rate than they are processed, consumption is stopped until messages already consumed are processed;
 
-* a commit management that ensures that all messages are processed at least once. A message is considered processed after all registered callbacks for it have finished successfuly. Nevertheless, if some of the registered callbacks throws an Error, there will be two possibilities. The first one, which is the default, the message will be considered discarded by the callback and will be committed on Kafka. The second one, the message will be considered unprocessed and the consumer will be finished up. In both cases, an 'error.processing' event is emitted. It is also possible to set a maximum number of retries to failed callbacks. Once the consumer is finished, the application will need to instantiate a new one which will start consuming from the last unprocessed message.
+* a commit management that ensures that all messages are processed at least once.
 
-The following example illustrates how to use the Consumer:
+The consumer has two exlusive modes of operation:
+
+* Synchronous - a message is marked to be committed immediately after its processing callbacks have finished successfuly. If any callback throws an Error, it will be retried by a given number of times. If it keeps failing, the message will be marked to be commited only if the property 'commit.on.failure' is 'true'; otherwise, the consumer will be finished up. In both cases, an 'error.processing' event is emitted.
+
+* Asynchronous - a message is marked to be committed immediately after its acknoledgements have been received. If any callback throws an Error, it will be retried by a given number of times. If it keeps failing, the consumer will be finished up and an 'error.processing' event will be emitted.
+
+Once the consumer is finished due to an unprocessed message, the application will need to instantiate a new one which will start consuming from the earliest uncommitted message.
+
+In the asynchronous mode, the responsability for acknowledging a message is entirely of the application, and forgetting to acknowledge will eventually block the consumer.
+
+The following example illustrates how to use the Synchronous Consumer:
 
 ```js
 const { Kafka: { Consumer } } = require('@dojot/microservice-sdk');
@@ -48,6 +57,43 @@ consumer.init().then(() => {
 });
 ```
 
+The following example illustrates how to use the Asynchronous Consumer:
+
+```js
+const { Kafka: { Consumer } } = require('@dojot/microservice-sdk');
+
+const consumer = new Consumer({
+  'enable.async.commit': true,
+  'kafka.consumer': {
+    'group.id': 'sdk-consumer-example',
+    'metadata.broker.list': 'localhost:9092',
+  }
+});
+
+// register on consumer's events
+consumer.on('ready', () => console.log('Received ready event'));
+consumer.on('disconnected', () => console.log('Received disconnected event'));
+consumer.on('paused', () => console.log('Received paused event'));
+consumer.on('resumed', () => console.log('Received resumed event'));
+consumer.on('error.connecting', () => console.log('Received error.connecting event'));
+consumer.on('error.processing', (cbId, data) => console.log(`Received error.processing event (cbId: ${cbId}: data: ${JSON.stringfy(data)}`));
+
+consumer.init().then(() => {
+    // the target kafka topic, it could be a String or a RegExp
+    const topic = "consumer.example.test";
+
+    // Register callback for processing incoming data
+    consumer.registerCallback(topic, (data, ack) => {
+        // Data processing
+        const { value: payload } = data;
+        console.log(`Payload: ${payload.toString()}`);
+        ack();
+    });
+}).catch((error) => {
+    console.error(`Caught an error: ${error.stack || error}`);
+});
+```
+
 ## Configuration
 
 The following properties can be set for the Consumer:
@@ -57,6 +103,7 @@ The following properties can be set for the Consumer:
 |in.processing.max.messages|The maximum number of messages being processed simultaneously. The processing callbacks are called in order but there is no guarantee regarding to the order of completion. Default value is 1.|
 |max.retries.processing.callbacks|The maximum number of times a processing
 callback is called if it fails. Default value is 0.|
+|enable.async.commit| True whether asynchronous mode is enabled; otherwise, fasle. Default value is false.|
 |commit.on.failure|True whether a message should be committed even if any of its
 processing callback has failed; false, otherwise. Default value is true.|
 |queued.max.messages.bytes|The maximum amount (in bytes) of queued messages waiting for being processed. The same queue is shared by all callbacks. Default value is 10485760.|

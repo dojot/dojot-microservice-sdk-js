@@ -16,7 +16,8 @@ attend the dojot microservices necessities.
   - [Backend Web Utils](https://github.com/dojot/dojot-microservice-sdk-js/blob/master/lib/webUtils/README.md)
 - Examples
   - [Configuration Manager](https://github.com/dojot/dojot-microservice-sdk-js/blob/master/examples/configManager/README.md)
-  - [Kafka's Consumer](https://github.com/dojot/dojot-microservice-sdk-js/blob/master/examples/consumer/README.md)
+  - [Kafka's Consumer (Sync Commit)](https://github.com/dojot/dojot-microservice-sdk-js/blob/master/examples/consumer/README.md)
+  - [Kafka's Consumer (Async Commit)](https://github.com/dojot/dojot-microservice-sdk-js/blob/master/examples/asyncConsumer/README.md)
   - [Kafka's Producer](https://github.com/dojot/dojot-microservice-sdk-js/blob/master/examples/producer/README.md)
   - [Logger](https://github.com/dojot/dojot-microservice-sdk-js/blob/master/examples/logging/README.md)
   - [Service State Manager](https://github.com/dojot/dojot-microservice-sdk-js/blob/master/examples/serviceStateManager/README.md)

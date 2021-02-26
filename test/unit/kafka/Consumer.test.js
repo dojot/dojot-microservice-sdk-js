@@ -640,6 +640,553 @@ describe('handle kafka (Processing Retry and Not Commit on Failure)', () => {
   });
 });
 
+describe('handle kafka (Async Commit)', () => {
+  let consumer = null;
+  beforeEach(() => {
+    consumer = new Consumer({
+      'max.retries.processing.callbacks': 2,
+      'commit.on.failure': false,
+      'enable.async.commit': true,
+    });
+    consumer.commitManager = new CommitManagerMock();
+    consumer.topicRegExpArray = [
+      {
+        id: 'entry1',
+        regExp: /^user\/.*/,
+      },
+    ];
+    consumer.topicMap['user/juri'] = [
+      { id: 'entry2' },
+    ];
+  });
+
+  test('Received all acknowledgements (immediate ack)', async () => {
+    const publishedData = {
+      value: Buffer.from('konnichiwa'), // message contents as a Buffer
+      size: 10, // size of the message, in bytes
+      topic: 'user/juri', // topic the message comes from
+      offset: 1337, // offset the message was read from
+      partition: 1, // partition the message was on
+      key: 'someKey', // key of the message if present
+      timestamp: 1510325354780, // timestamp of message creation
+    };
+    const msgKey = JSON.stringify(
+      {
+        topic: publishedData.topic,
+        partition: publishedData.partition,
+        offset: publishedData.offset,
+      },
+    );
+
+
+    consumer.topicRegExpArray[0].callback = jest
+      .fn()
+      .mockImplementationOnce((data, ack) => {
+        ack();
+      });
+
+    consumer.topicMap[publishedData.topic][0].callback = jest
+      .fn()
+      .mockImplementationOnce((data, ack) => {
+        ack();
+      });
+
+    consumer.invokeInterestedCallbacks(publishedData);
+
+    expect(consumer.topicRegExpArray[0].callback)
+      .toHaveBeenCalledWith(publishedData, expect.any(Function));
+    expect(consumer.topicRegExpArray[0].callback)
+      .toHaveBeenCalledTimes(1);
+    expect(consumer.topicMap[publishedData.topic][0].callback)
+      .toHaveBeenCalledWith(publishedData, expect.any(Function));
+    expect(consumer.topicMap[publishedData.topic][0].callback)
+      .toHaveBeenCalledTimes(1);
+    expect(consumer.commitManager.notifyFinishedProcessing)
+      .toHaveBeenCalledTimes(1);
+    expect(consumer.unackMsgs[msgKey]).toBeUndefined();
+  });
+
+  test('Received all acknowledgements (out of order ack)', async () => {
+    const publishedData = {
+      value: Buffer.from('konnichiwa'), // message contents as a Buffer
+      size: 10, // size of the message, in bytes
+      topic: 'user/juri', // topic the message comes from
+      offset: 1337, // offset the message was read from
+      partition: 1, // partition the message was on
+      key: 'someKey', // key of the message if present
+      timestamp: 1510325354780, // timestamp of message creation
+    };
+    const msgKey = JSON.stringify(
+      {
+        topic: publishedData.topic,
+        partition: publishedData.partition,
+        offset: publishedData.offset,
+      },
+    );
+
+
+    let ack1;
+    let ack2;
+    consumer.topicRegExpArray[0].callback = jest
+      .fn()
+      .mockImplementationOnce((data, ack) => {
+        ack1 = ack;
+      });
+
+    consumer.topicMap[publishedData.topic][0].callback = jest
+      .fn()
+      .mockImplementationOnce((data, ack) => {
+        ack2 = ack;
+      });
+
+    await consumer.invokeInterestedCallbacks(publishedData);
+    ack2();
+    ack1();
+
+    expect(consumer.topicRegExpArray[0].callback)
+      .toHaveBeenCalledWith(publishedData, expect.any(Function));
+    expect(consumer.topicRegExpArray[0].callback)
+      .toHaveBeenCalledTimes(1);
+    expect(consumer.topicMap[publishedData.topic][0].callback)
+      .toHaveBeenCalledWith(publishedData, expect.any(Function));
+    expect(consumer.topicMap[publishedData.topic][0].callback)
+      .toHaveBeenCalledTimes(1);
+    expect(consumer.commitManager.notifyFinishedProcessing)
+      .toHaveBeenCalledTimes(1);
+    expect(consumer.unackMsgs[msgKey]).toBeUndefined();
+  });
+
+  test('Pending acknowledgements (all)', async () => {
+    const publishedData = {
+      value: Buffer.from('konnichiwa'), // message contents as a Buffer
+      size: 10, // size of the message, in bytes
+      topic: 'user/juri', // topic the message comes from
+      offset: 1337, // offset the message was read from
+      partition: 1, // partition the message was on
+      key: 'someKey', // key of the message if present
+      timestamp: 1510325354780, // timestamp of message creation
+    };
+    const msgKey = JSON.stringify(
+      {
+        topic: publishedData.topic,
+        partition: publishedData.partition,
+        offset: publishedData.offset,
+      },
+    );
+
+    consumer.topicRegExpArray[0].callback = jest
+      .fn()
+      .mockImplementationOnce(() => {});
+
+    consumer.topicMap[publishedData.topic][0].callback = jest
+      .fn()
+      .mockImplementationOnce(() => {});
+
+    consumer.invokeInterestedCallbacks(publishedData);
+
+    expect(consumer.topicRegExpArray[0].callback)
+      .toHaveBeenCalledWith(publishedData, expect.any(Function));
+    expect(consumer.topicRegExpArray[0].callback)
+      .toHaveBeenCalledTimes(1);
+    expect(consumer.topicMap[publishedData.topic][0].callback)
+      .toHaveBeenCalledWith(publishedData, expect.any(Function));
+    expect(consumer.topicMap[publishedData.topic][0].callback)
+      .toHaveBeenCalledTimes(1);
+    expect(consumer.commitManager.notifyFinishedProcessing)
+      .not.toHaveBeenCalled();
+    expect(consumer.unackMsgs[msgKey]).toEqual(2);
+  });
+
+  test('Pending acknowledgements (one)', async () => {
+    const publishedData = {
+      value: Buffer.from('konnichiwa'), // message contents as a Buffer
+      size: 10, // size of the message, in bytes
+      topic: 'user/juri', // topic the message comes from
+      offset: 1337, // offset the message was read from
+      partition: 1, // partition the message was on
+      key: 'someKey', // key of the message if present
+      timestamp: 1510325354780, // timestamp of message creation
+    };
+    const msgKey = JSON.stringify(
+      {
+        topic: publishedData.topic,
+        partition: publishedData.partition,
+        offset: publishedData.offset,
+      },
+    );
+
+    consumer.topicRegExpArray[0].callback = jest
+      .fn()
+      .mockImplementationOnce(() => {});
+
+    consumer.topicMap[publishedData.topic][0].callback = jest
+      .fn()
+      .mockImplementationOnce((data, ack) => {
+        ack();
+      });
+
+    consumer.invokeInterestedCallbacks(publishedData);
+
+    expect(consumer.topicRegExpArray[0].callback)
+      .toHaveBeenCalledWith(publishedData, expect.any(Function));
+    expect(consumer.topicRegExpArray[0].callback)
+      .toHaveBeenCalledTimes(1);
+    expect(consumer.topicMap[publishedData.topic][0].callback)
+      .toHaveBeenCalledWith(publishedData, expect.any(Function));
+    expect(consumer.topicMap[publishedData.topic][0].callback)
+      .toHaveBeenCalledTimes(1);
+    expect(consumer.commitManager.notifyFinishedProcessing)
+      .not.toHaveBeenCalled();
+    expect(consumer.unackMsgs[msgKey]).toEqual(1);
+  });
+
+  test('Pending acknowledgements (multiple acks - explicit topic)', async () => {
+    const publishedData = {
+      value: Buffer.from('konnichiwa'), // message contents as a Buffer
+      size: 10, // size of the message, in bytes
+      topic: 'user/juri', // topic the message comes from
+      offset: 1337, // offset the message was read from
+      partition: 1, // partition the message was on
+      key: 'someKey', // key of the message if present
+      timestamp: 1510325354780, // timestamp of message creation
+    };
+    const msgKey = JSON.stringify(
+      {
+        topic: publishedData.topic,
+        partition: publishedData.partition,
+        offset: publishedData.offset,
+      },
+    );
+
+    consumer.topicRegExpArray[0].callback = jest
+      .fn()
+      .mockImplementationOnce(() => {});
+
+    consumer.topicMap[publishedData.topic][0].callback = jest
+      .fn()
+      .mockImplementationOnce((data, ack) => {
+        ack();
+        ack(); // second call
+      });
+
+    consumer.invokeInterestedCallbacks(publishedData);
+
+    expect(consumer.topicRegExpArray[0].callback)
+      .toHaveBeenCalledWith(publishedData, expect.any(Function));
+    expect(consumer.topicRegExpArray[0].callback)
+      .toHaveBeenCalledTimes(1);
+    expect(consumer.topicMap[publishedData.topic][0].callback)
+      .toHaveBeenCalledWith(publishedData, expect.any(Function));
+    expect(consumer.topicMap[publishedData.topic][0].callback)
+      .toHaveBeenCalledTimes(1);
+    expect(consumer.commitManager.notifyFinishedProcessing)
+      .not.toHaveBeenCalled();
+    expect(consumer.unackMsgs[msgKey]).toEqual(1);
+  });
+
+  test('Pending acknowledgements (multiple ack - regex topic)', async () => {
+    const publishedData = {
+      value: Buffer.from('konnichiwa'), // message contents as a Buffer
+      size: 10, // size of the message, in bytes
+      topic: 'user/juri', // topic the message comes from
+      offset: 1337, // offset the message was read from
+      partition: 1, // partition the message was on
+      key: 'someKey', // key of the message if present
+      timestamp: 1510325354780, // timestamp of message creation
+    };
+    const msgKey = JSON.stringify(
+      {
+        topic: publishedData.topic,
+        partition: publishedData.partition,
+        offset: publishedData.offset,
+      },
+    );
+
+    consumer.topicRegExpArray[0].callback = jest
+      .fn()
+      .mockImplementationOnce((data, ack) => {
+        ack();
+        ack();
+      });
+
+    consumer.topicMap[publishedData.topic][0].callback = jest
+      .fn()
+      .mockImplementationOnce(() => {});
+
+    consumer.invokeInterestedCallbacks(publishedData);
+
+    expect(consumer.topicRegExpArray[0].callback)
+      .toHaveBeenCalledWith(publishedData, expect.any(Function));
+    expect(consumer.topicRegExpArray[0].callback)
+      .toHaveBeenCalledTimes(1);
+    expect(consumer.topicMap[publishedData.topic][0].callback)
+      .toHaveBeenCalledWith(publishedData, expect.any(Function));
+    expect(consumer.topicMap[publishedData.topic][0].callback)
+      .toHaveBeenCalledTimes(1);
+    expect(consumer.commitManager.notifyFinishedProcessing)
+      .not.toHaveBeenCalled();
+    expect(consumer.unackMsgs[msgKey]).toEqual(1);
+  });
+
+  test('Message processing that fails for all retries', async () => {
+    const publishedData = {
+      value: Buffer.from('konnichiwa'), // message contents as a Buffer
+      size: 10, // size of the message, in bytes
+      topic: 'user/juri', // topic the message comes from
+      offset: 1337, // offset the message was read from
+      partition: 1, // partition the message was on
+      key: 'someKey', // key of the message if present
+      timestamp: 1510325354780, // timestamp of message creation
+    };
+    const msgKey = JSON.stringify(
+      {
+        topic: publishedData.topic,
+        partition: publishedData.partition,
+        offset: publishedData.offset,
+      },
+    );
+
+    consumer.topicRegExpArray[0].callback = jest
+      .fn()
+      .mockImplementation(() => {
+        throw new Error();
+      });
+
+    consumer.topicMap[publishedData.topic][0].callback = jest
+      .fn()
+      .mockImplementation(() => {
+        throw new Error();
+      });
+
+    const errorHandler = jest.fn();
+    consumer.on('error.processing', errorHandler);
+
+    consumer.invokeInterestedCallbacks(publishedData);
+
+    expect(consumer.topicRegExpArray[0].callback)
+      .toHaveBeenCalledWith(publishedData, expect.any(Function));
+    expect(consumer.topicRegExpArray[0].callback)
+      .toHaveBeenCalledTimes(3);
+    expect(consumer.topicMap[publishedData.topic][0].callback)
+      .toHaveBeenCalledWith(publishedData, expect.any(Function));
+    expect(consumer.topicMap[publishedData.topic][0].callback)
+      .toHaveBeenCalledTimes(3);
+    expect(consumer.commitManager.notifyFinishedProcessing)
+      .not.toHaveBeenCalled();
+    expect(consumer.unackMsgs[msgKey]).toBeUndefined();
+    expect(errorHandler).toHaveBeenCalledTimes(2);
+    expect(errorHandler).toHaveBeenCalledWith(
+      consumer.topicRegExpArray[0].id, publishedData,
+    );
+    expect(errorHandler).toHaveBeenCalledWith(
+      consumer.topicMap[publishedData.topic][0].id, publishedData,
+    );
+  });
+
+  test('Message processing that fails for all retries of a given callback (regex topic)', async () => {
+    const publishedData = {
+      value: Buffer.from('konnichiwa'), // message contents as a Buffer
+      size: 10, // size of the message, in bytes
+      topic: 'user/juri', // topic the message comes from
+      offset: 1337, // offset the message was read from
+      partition: 1, // partition the message was on
+      key: 'someKey', // key of the message if present
+      timestamp: 1510325354780, // timestamp of message creation
+    };
+    const msgKey = JSON.stringify(
+      {
+        topic: publishedData.topic,
+        partition: publishedData.partition,
+        offset: publishedData.offset,
+      },
+    );
+
+    consumer.topicRegExpArray[0].callback = jest
+      .fn()
+      .mockImplementation(() => {
+        throw new Error();
+      });
+
+    consumer.topicMap[publishedData.topic][0].callback = jest
+      .fn()
+      .mockImplementation((data, ack) => {
+        ack();
+      });
+
+    const errorHandler = jest.fn();
+    consumer.on('error.processing', errorHandler);
+
+    consumer.invokeInterestedCallbacks(publishedData);
+
+    expect(consumer.topicRegExpArray[0].callback)
+      .toHaveBeenCalledWith(publishedData, expect.any(Function));
+    expect(consumer.topicRegExpArray[0].callback)
+      .toHaveBeenCalledTimes(3);
+    expect(consumer.topicMap[publishedData.topic][0].callback)
+      .toHaveBeenCalledWith(publishedData, expect.any(Function));
+    expect(consumer.topicMap[publishedData.topic][0].callback)
+      .toHaveBeenCalledTimes(1);
+    expect(consumer.commitManager.notifyFinishedProcessing)
+      .not.toHaveBeenCalled();
+    expect(consumer.unackMsgs[msgKey]).toBeUndefined();
+    expect(errorHandler).toHaveBeenCalledTimes(1);
+    expect(errorHandler).toHaveBeenCalledWith(
+      consumer.topicRegExpArray[0].id, publishedData,
+    );
+  });
+
+  test('Message processing that fails for all retries of a given callback (explicit topic)', async () => {
+    const publishedData = {
+      value: Buffer.from('konnichiwa'), // message contents as a Buffer
+      size: 10, // size of the message, in bytes
+      topic: 'user/juri', // topic the message comes from
+      offset: 1337, // offset the message was read from
+      partition: 1, // partition the message was on
+      key: 'someKey', // key of the message if present
+      timestamp: 1510325354780, // timestamp of message creation
+    };
+    const msgKey = JSON.stringify(
+      {
+        topic: publishedData.topic,
+        partition: publishedData.partition,
+        offset: publishedData.offset,
+      },
+    );
+
+    consumer.topicRegExpArray[0].callback = jest
+      .fn()
+      .mockImplementation((data, ack) => {
+        ack();
+      });
+
+    consumer.topicMap[publishedData.topic][0].callback = jest
+      .fn()
+      .mockImplementation(() => {
+        throw new Error();
+      });
+
+    const errorHandler = jest.fn();
+    consumer.on('error.processing', errorHandler);
+
+    consumer.invokeInterestedCallbacks(publishedData);
+
+    expect(consumer.topicRegExpArray[0].callback)
+      .toHaveBeenCalledWith(publishedData, expect.any(Function));
+    expect(consumer.topicRegExpArray[0].callback)
+      .toHaveBeenCalledTimes(1);
+    expect(consumer.topicMap[publishedData.topic][0].callback)
+      .toHaveBeenCalledWith(publishedData, expect.any(Function));
+    expect(consumer.topicMap[publishedData.topic][0].callback)
+      .toHaveBeenCalledTimes(3);
+    expect(consumer.commitManager.notifyFinishedProcessing)
+      .not.toHaveBeenCalled();
+    expect(consumer.unackMsgs[msgKey]).toBeUndefined();
+    expect(errorHandler).toHaveBeenCalledTimes(1);
+    expect(errorHandler).toHaveBeenCalledWith(
+      consumer.topicMap[publishedData.topic][0].id, publishedData,
+    );
+  });
+
+  test('Message processing that succeeds in the first retry', async () => {
+    const publishedData = {
+      value: Buffer.from('konnichiwa'), // message contents as a Buffer
+      size: 10, // size of the message, in bytes
+      topic: 'user/juri', // topic the message comes from
+      offset: 1337, // offset the message was read from
+      partition: 1, // partition the message was on
+      key: 'someKey', // key of the message if present
+      timestamp: 1510325354780, // timestamp of message creation
+    };
+    const msgKey = JSON.stringify(
+      {
+        topic: publishedData.topic,
+        partition: publishedData.partition,
+        offset: publishedData.offset,
+      },
+    );
+
+    consumer.topicRegExpArray[0].callback = jest
+      .fn()
+      .mockImplementationOnce(() => {
+        throw new Error();
+      })
+      .mockImplementation((data, ack) => {
+        ack();
+      });
+
+    consumer.topicMap[publishedData.topic][0].callback = jest
+      .fn()
+      .mockImplementationOnce(() => {
+        throw new Error();
+      })
+      .mockImplementation((data, ack) => {
+        ack();
+      });
+
+    consumer.invokeInterestedCallbacks(publishedData);
+
+    expect(consumer.topicRegExpArray[0].callback)
+      .toHaveBeenCalledWith(publishedData, expect.any(Function));
+    expect(consumer.topicRegExpArray[0].callback)
+      .toHaveBeenCalledTimes(2);
+    expect(consumer.topicMap[publishedData.topic][0].callback)
+      .toHaveBeenCalledWith(publishedData, expect.any(Function));
+    expect(consumer.topicMap[publishedData.topic][0].callback)
+      .toHaveBeenCalledTimes(2);
+    expect(consumer.commitManager.notifyFinishedProcessing)
+      .toHaveBeenCalledTimes(1);
+    expect(consumer.unackMsgs[msgKey]).toBeUndefined();
+  });
+
+
+  test('Epoch Changed', async () => {
+    const publishedData = {
+      value: Buffer.from('konnichiwa'), // message contents as a Buffer
+      size: 10, // size of the message, in bytes
+      topic: 'user/juri', // topic the message comes from
+      offset: 1337, // offset the message was read from
+      partition: 1, // partition the message was on
+      key: 'someKey', // key of the message if present
+      timestamp: 1510325354780, // timestamp of message creation
+    };
+
+    let ack1;
+    let ack2;
+    consumer.topicRegExpArray[0].callback = jest
+      .fn()
+      .mockImplementationOnce((data, ack) => {
+        ack1 = ack;
+      });
+
+    consumer.topicMap[publishedData.topic][0].callback = jest
+      .fn()
+      .mockImplementation((data, ack) => {
+        ack2 = ack;
+      });
+
+    // invoke callbacks
+    consumer.invokeInterestedCallbacks(publishedData);
+
+    // change epoch (rebalance)
+    consumer.epoch += 1;
+
+    // late acknowledgements (previous epoch)
+    ack1();
+    ack2();
+
+    expect(consumer.topicRegExpArray[0].callback)
+      .toHaveBeenCalledWith(publishedData, expect.any(Function));
+    expect(consumer.topicRegExpArray[0].callback)
+      .toHaveBeenCalledTimes(1);
+    expect(consumer.topicMap[publishedData.topic][0].callback)
+      .toHaveBeenCalledWith(publishedData, expect.any(Function));
+    expect(consumer.topicMap[publishedData.topic][0].callback)
+      .toHaveBeenCalledTimes(1);
+    expect(consumer.commitManager.notifyFinishedProcessing)
+      .not.toHaveBeenCalled();
+  });
+});
+
 describe('Refresh subscription', () => {
   test('Refresh subscription', () => {
     // sets the fake timer to analyze the refreshSubscriptions

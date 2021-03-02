@@ -876,7 +876,7 @@ describe('handle kafka (Async Commit)', () => {
       .fn()
       .mockImplementationOnce((data, ack) => {
         ack1Return = ack();
-        ack2Return = ack(); //second call
+        ack2Return = ack(); // second call
       });
 
     consumer.topicMap[publishedData.topic][0].callback = jest

@@ -714,8 +714,6 @@ describe('handle kafka (Async Commit)', () => {
 
     let ack1;
     let ack2;
-    let ack1Return;
-    let ack2Return;
     consumer.topicRegExpArray[0].callback = jest
       .fn()
       .mockImplementationOnce((data, ack) => {
@@ -729,8 +727,8 @@ describe('handle kafka (Async Commit)', () => {
       });
 
     await consumer.invokeInterestedCallbacks(publishedData);
-    ack2Return = ack2();
-    ack1Return = ack1();
+    const ack2Return = ack2();
+    const ack1Return = ack1();
 
     expect(consumer.topicRegExpArray[0].callback)
       .toHaveBeenCalledWith(publishedData, expect.any(Function));
@@ -876,7 +874,7 @@ describe('handle kafka (Async Commit)', () => {
       .fn()
       .mockImplementationOnce((data, ack) => {
         ack1Return = ack();
-        ack2Return = ack(); //second call
+        ack2Return = ack(); // second call
       });
 
     consumer.topicMap[publishedData.topic][0].callback = jest
@@ -1102,8 +1100,6 @@ describe('handle kafka (Async Commit)', () => {
 
     let ack1;
     let ack2;
-    let ack1Return;
-    let ack2Return;
 
     consumer.topicRegExpArray[0].callback = jest
       .fn()
@@ -1124,8 +1120,8 @@ describe('handle kafka (Async Commit)', () => {
     consumer.epoch += 1;
 
     // late acknowledgements (previous epoch)
-    ack1Return = ack1();
-    ack2Return = ack2();
+    const ack1Return = ack1();
+    const ack2Return = ack2();
 
     expect(consumer.topicRegExpArray[0].callback)
       .toHaveBeenCalledWith(publishedData, expect.any(Function));

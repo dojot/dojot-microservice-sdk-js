@@ -12,15 +12,15 @@ To read messages from Kafka, you use the Consumer class, which is a wrapper over
 
 * a commit management that ensures that all messages are processed at least once.
 
-The consumer has two exlusive modes of operation:
+The consumer has two exclusive modes of operation:
 
-* Synchronous - a message is marked to be committed immediately after its processing callbacks have finished successfuly. If any callback throws an Error, it will be retried by a given number of times. If it keeps failing, the message will be marked to be commited only if the property 'commit.on.failure' is 'true'; otherwise, the consumer will be finished up. In both cases, an 'error.processing' event is emitted.
+* Synchronous - a message is marked to be committed immediately after its processing callbacks have finished successfully. If any callback throws an Error, it will be retried by a given number of times. If it keeps failing, the message will be marked to be committed only if the property 'commit.on.failure' is 'true'; otherwise, the consumer will be finished up. In both cases, an 'error.processing' event is emitted.
 
-* Asynchronous - a message is marked to be committed immediately after its acknoledgements have been received. If any callback throws an Error, it will be retried by a given number of times. If it keeps failing, the consumer will be finished up and an 'error.processing' event will be emitted.
+* Asynchronous - a message is marked to be committed immediately after its acknowledgements have been received. If any callback throws an Error, it will be retried by a given number of times. If it keeps failing, the consumer will be finished up and an 'error.processing' event will be emitted.
 
 Once the consumer is finished due to an unprocessed message, the application will need to instantiate a new one which will start consuming from the earliest uncommitted message.
 
-In the asynchronous mode, the responsability for acknowledging a message is entirely of the application, and forgetting to acknowledge will eventually block the consumer.
+In the asynchronous mode, the responsibility for acknowledging a message is entirely of the application, and forgetting to acknowledge will eventually block the consumer.
 
 The following example illustrates how to use the Synchronous Consumer:
 
@@ -103,7 +103,7 @@ The following properties can be set for the Consumer:
 |in.processing.max.messages|The maximum number of messages being processed simultaneously. The processing callbacks are called in order but there is no guarantee regarding to the order of completion. Default value is 1.|
 |max.retries.processing.callbacks|The maximum number of times a processing
 callback is called if it fails. Default value is 0.|
-|enable.async.commit| True whether asynchronous mode is enabled; otherwise, fasle. Default value is false.|
+|enable.async.commit| True whether asynchronous mode is enabled; otherwise, false. Default value is false.|
 |commit.on.failure|True whether a message should be committed even if any of its
 processing callback has failed; false, otherwise. Default value is true.|
 |queued.max.messages.bytes|The maximum amount (in bytes) of queued messages waiting for being processed. The same queue is shared by all callbacks. Default value is 10485760.|

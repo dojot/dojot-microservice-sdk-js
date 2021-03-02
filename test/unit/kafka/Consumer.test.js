@@ -670,25 +670,19 @@ describe('handle kafka (Async Commit)', () => {
       key: 'someKey', // key of the message if present
       timestamp: 1510325354780, // timestamp of message creation
     };
-    const msgKey = JSON.stringify(
-      {
-        topic: publishedData.topic,
-        partition: publishedData.partition,
-        offset: publishedData.offset,
-      },
-    );
 
-
+    let ack1Return;
+    let ack2Return;
     consumer.topicRegExpArray[0].callback = jest
       .fn()
       .mockImplementationOnce((data, ack) => {
-        ack();
+        ack1Return = ack();
       });
 
     consumer.topicMap[publishedData.topic][0].callback = jest
       .fn()
       .mockImplementationOnce((data, ack) => {
-        ack();
+        ack2Return = ack();
       });
 
     consumer.invokeInterestedCallbacks(publishedData);
@@ -703,7 +697,8 @@ describe('handle kafka (Async Commit)', () => {
       .toHaveBeenCalledTimes(1);
     expect(consumer.commitManager.notifyFinishedProcessing)
       .toHaveBeenCalledTimes(1);
-    expect(consumer.unackMsgs[msgKey]).toBeUndefined();
+    expect(ack1Return).toBeTruthy();
+    expect(ack2Return).toBeTruthy();
   });
 
   test('Received all acknowledgements (out of order ack)', async () => {
@@ -716,17 +711,11 @@ describe('handle kafka (Async Commit)', () => {
       key: 'someKey', // key of the message if present
       timestamp: 1510325354780, // timestamp of message creation
     };
-    const msgKey = JSON.stringify(
-      {
-        topic: publishedData.topic,
-        partition: publishedData.partition,
-        offset: publishedData.offset,
-      },
-    );
-
 
     let ack1;
     let ack2;
+    let ack1Return;
+    let ack2Return;
     consumer.topicRegExpArray[0].callback = jest
       .fn()
       .mockImplementationOnce((data, ack) => {
@@ -740,8 +729,8 @@ describe('handle kafka (Async Commit)', () => {
       });
 
     await consumer.invokeInterestedCallbacks(publishedData);
-    ack2();
-    ack1();
+    ack2Return = ack2();
+    ack1Return = ack1();
 
     expect(consumer.topicRegExpArray[0].callback)
       .toHaveBeenCalledWith(publishedData, expect.any(Function));
@@ -753,7 +742,8 @@ describe('handle kafka (Async Commit)', () => {
       .toHaveBeenCalledTimes(1);
     expect(consumer.commitManager.notifyFinishedProcessing)
       .toHaveBeenCalledTimes(1);
-    expect(consumer.unackMsgs[msgKey]).toBeUndefined();
+    expect(ack1Return).toBeTruthy();
+    expect(ack2Return).toBeTruthy();
   });
 
   test('Pending acknowledgements (all)', async () => {
@@ -766,13 +756,6 @@ describe('handle kafka (Async Commit)', () => {
       key: 'someKey', // key of the message if present
       timestamp: 1510325354780, // timestamp of message creation
     };
-    const msgKey = JSON.stringify(
-      {
-        topic: publishedData.topic,
-        partition: publishedData.partition,
-        offset: publishedData.offset,
-      },
-    );
 
     consumer.topicRegExpArray[0].callback = jest
       .fn()
@@ -794,7 +777,6 @@ describe('handle kafka (Async Commit)', () => {
       .toHaveBeenCalledTimes(1);
     expect(consumer.commitManager.notifyFinishedProcessing)
       .not.toHaveBeenCalled();
-    expect(consumer.unackMsgs[msgKey]).toEqual(2);
   });
 
   test('Pending acknowledgements (one)', async () => {
@@ -807,13 +789,8 @@ describe('handle kafka (Async Commit)', () => {
       key: 'someKey', // key of the message if present
       timestamp: 1510325354780, // timestamp of message creation
     };
-    const msgKey = JSON.stringify(
-      {
-        topic: publishedData.topic,
-        partition: publishedData.partition,
-        offset: publishedData.offset,
-      },
-    );
+
+    let ackReturn;
 
     consumer.topicRegExpArray[0].callback = jest
       .fn()
@@ -822,7 +799,7 @@ describe('handle kafka (Async Commit)', () => {
     consumer.topicMap[publishedData.topic][0].callback = jest
       .fn()
       .mockImplementationOnce((data, ack) => {
-        ack();
+        ackReturn = ack();
       });
 
     consumer.invokeInterestedCallbacks(publishedData);
@@ -837,7 +814,7 @@ describe('handle kafka (Async Commit)', () => {
       .toHaveBeenCalledTimes(1);
     expect(consumer.commitManager.notifyFinishedProcessing)
       .not.toHaveBeenCalled();
-    expect(consumer.unackMsgs[msgKey]).toEqual(1);
+    expect(ackReturn).toBeTruthy();
   });
 
   test('Pending acknowledgements (multiple acks - explicit topic)', async () => {
@@ -850,13 +827,9 @@ describe('handle kafka (Async Commit)', () => {
       key: 'someKey', // key of the message if present
       timestamp: 1510325354780, // timestamp of message creation
     };
-    const msgKey = JSON.stringify(
-      {
-        topic: publishedData.topic,
-        partition: publishedData.partition,
-        offset: publishedData.offset,
-      },
-    );
+
+    let ack1Return;
+    let ack2Return;
 
     consumer.topicRegExpArray[0].callback = jest
       .fn()
@@ -865,8 +838,8 @@ describe('handle kafka (Async Commit)', () => {
     consumer.topicMap[publishedData.topic][0].callback = jest
       .fn()
       .mockImplementationOnce((data, ack) => {
-        ack();
-        ack(); // second call
+        ack1Return = ack();
+        ack2Return = ack(); // second call
       });
 
     consumer.invokeInterestedCallbacks(publishedData);
@@ -881,7 +854,8 @@ describe('handle kafka (Async Commit)', () => {
       .toHaveBeenCalledTimes(1);
     expect(consumer.commitManager.notifyFinishedProcessing)
       .not.toHaveBeenCalled();
-    expect(consumer.unackMsgs[msgKey]).toEqual(1);
+    expect(ack1Return).toBeTruthy();
+    expect(ack2Return).toBeFalsy();
   });
 
   test('Pending acknowledgements (multiple ack - regex topic)', async () => {
@@ -894,19 +868,15 @@ describe('handle kafka (Async Commit)', () => {
       key: 'someKey', // key of the message if present
       timestamp: 1510325354780, // timestamp of message creation
     };
-    const msgKey = JSON.stringify(
-      {
-        topic: publishedData.topic,
-        partition: publishedData.partition,
-        offset: publishedData.offset,
-      },
-    );
+
+    let ack1Return;
+    let ack2Return;
 
     consumer.topicRegExpArray[0].callback = jest
       .fn()
       .mockImplementationOnce((data, ack) => {
-        ack();
-        ack();
+        ack1Return = ack();
+        ack2Return = ack(); //second call
       });
 
     consumer.topicMap[publishedData.topic][0].callback = jest
@@ -925,7 +895,8 @@ describe('handle kafka (Async Commit)', () => {
       .toHaveBeenCalledTimes(1);
     expect(consumer.commitManager.notifyFinishedProcessing)
       .not.toHaveBeenCalled();
-    expect(consumer.unackMsgs[msgKey]).toEqual(1);
+    expect(ack1Return).toBeTruthy();
+    expect(ack2Return).toBeFalsy();
   });
 
   test('Message processing that fails for all retries', async () => {
@@ -938,13 +909,6 @@ describe('handle kafka (Async Commit)', () => {
       key: 'someKey', // key of the message if present
       timestamp: 1510325354780, // timestamp of message creation
     };
-    const msgKey = JSON.stringify(
-      {
-        topic: publishedData.topic,
-        partition: publishedData.partition,
-        offset: publishedData.offset,
-      },
-    );
 
     consumer.topicRegExpArray[0].callback = jest
       .fn()
@@ -973,7 +937,6 @@ describe('handle kafka (Async Commit)', () => {
       .toHaveBeenCalledTimes(3);
     expect(consumer.commitManager.notifyFinishedProcessing)
       .not.toHaveBeenCalled();
-    expect(consumer.unackMsgs[msgKey]).toBeUndefined();
     expect(errorHandler).toHaveBeenCalledTimes(2);
     expect(errorHandler).toHaveBeenCalledWith(
       consumer.topicRegExpArray[0].id, publishedData,
@@ -993,13 +956,8 @@ describe('handle kafka (Async Commit)', () => {
       key: 'someKey', // key of the message if present
       timestamp: 1510325354780, // timestamp of message creation
     };
-    const msgKey = JSON.stringify(
-      {
-        topic: publishedData.topic,
-        partition: publishedData.partition,
-        offset: publishedData.offset,
-      },
-    );
+
+    let ackReturn;
 
     consumer.topicRegExpArray[0].callback = jest
       .fn()
@@ -1010,7 +968,7 @@ describe('handle kafka (Async Commit)', () => {
     consumer.topicMap[publishedData.topic][0].callback = jest
       .fn()
       .mockImplementation((data, ack) => {
-        ack();
+        ackReturn = ack();
       });
 
     const errorHandler = jest.fn();
@@ -1028,11 +986,11 @@ describe('handle kafka (Async Commit)', () => {
       .toHaveBeenCalledTimes(1);
     expect(consumer.commitManager.notifyFinishedProcessing)
       .not.toHaveBeenCalled();
-    expect(consumer.unackMsgs[msgKey]).toBeUndefined();
     expect(errorHandler).toHaveBeenCalledTimes(1);
     expect(errorHandler).toHaveBeenCalledWith(
       consumer.topicRegExpArray[0].id, publishedData,
     );
+    expect(ackReturn).toBeTruthy();
   });
 
   test('Message processing that fails for all retries of a given callback (explicit topic)', async () => {
@@ -1045,18 +1003,13 @@ describe('handle kafka (Async Commit)', () => {
       key: 'someKey', // key of the message if present
       timestamp: 1510325354780, // timestamp of message creation
     };
-    const msgKey = JSON.stringify(
-      {
-        topic: publishedData.topic,
-        partition: publishedData.partition,
-        offset: publishedData.offset,
-      },
-    );
+
+    let ackReturn;
 
     consumer.topicRegExpArray[0].callback = jest
       .fn()
       .mockImplementation((data, ack) => {
-        ack();
+        ackReturn = ack();
       });
 
     consumer.topicMap[publishedData.topic][0].callback = jest
@@ -1080,11 +1033,11 @@ describe('handle kafka (Async Commit)', () => {
       .toHaveBeenCalledTimes(3);
     expect(consumer.commitManager.notifyFinishedProcessing)
       .not.toHaveBeenCalled();
-    expect(consumer.unackMsgs[msgKey]).toBeUndefined();
     expect(errorHandler).toHaveBeenCalledTimes(1);
     expect(errorHandler).toHaveBeenCalledWith(
       consumer.topicMap[publishedData.topic][0].id, publishedData,
     );
+    expect(ackReturn).toBeTruthy();
   });
 
   test('Message processing that succeeds in the first retry', async () => {
@@ -1097,13 +1050,9 @@ describe('handle kafka (Async Commit)', () => {
       key: 'someKey', // key of the message if present
       timestamp: 1510325354780, // timestamp of message creation
     };
-    const msgKey = JSON.stringify(
-      {
-        topic: publishedData.topic,
-        partition: publishedData.partition,
-        offset: publishedData.offset,
-      },
-    );
+
+    let ack1Return;
+    let ack2Return;
 
     consumer.topicRegExpArray[0].callback = jest
       .fn()
@@ -1111,7 +1060,7 @@ describe('handle kafka (Async Commit)', () => {
         throw new Error();
       })
       .mockImplementation((data, ack) => {
-        ack();
+        ack1Return = ack();
       });
 
     consumer.topicMap[publishedData.topic][0].callback = jest
@@ -1120,7 +1069,7 @@ describe('handle kafka (Async Commit)', () => {
         throw new Error();
       })
       .mockImplementation((data, ack) => {
-        ack();
+        ack2Return = ack();
       });
 
     consumer.invokeInterestedCallbacks(publishedData);
@@ -1135,7 +1084,8 @@ describe('handle kafka (Async Commit)', () => {
       .toHaveBeenCalledTimes(2);
     expect(consumer.commitManager.notifyFinishedProcessing)
       .toHaveBeenCalledTimes(1);
-    expect(consumer.unackMsgs[msgKey]).toBeUndefined();
+    expect(ack1Return).toBeTruthy();
+    expect(ack2Return).toBeTruthy();
   });
 
 
@@ -1152,6 +1102,9 @@ describe('handle kafka (Async Commit)', () => {
 
     let ack1;
     let ack2;
+    let ack1Return;
+    let ack2Return;
+
     consumer.topicRegExpArray[0].callback = jest
       .fn()
       .mockImplementationOnce((data, ack) => {
@@ -1171,8 +1124,8 @@ describe('handle kafka (Async Commit)', () => {
     consumer.epoch += 1;
 
     // late acknowledgements (previous epoch)
-    ack1();
-    ack2();
+    ack1Return = ack1();
+    ack2Return = ack2();
 
     expect(consumer.topicRegExpArray[0].callback)
       .toHaveBeenCalledWith(publishedData, expect.any(Function));
@@ -1184,6 +1137,8 @@ describe('handle kafka (Async Commit)', () => {
       .toHaveBeenCalledTimes(1);
     expect(consumer.commitManager.notifyFinishedProcessing)
       .not.toHaveBeenCalled();
+    expect(ack1Return).toBeFalsy();
+    expect(ack2Return).toBeFalsy();
   });
 });
 

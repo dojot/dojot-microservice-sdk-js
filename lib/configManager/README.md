@@ -166,7 +166,6 @@ Sometimes you want to use a environment variable in your parameters. You can do 
 
 ```
 mqtt.hostname=${HOSTNAME:-v2k-bridge}
-app.config.file=${NODE_ENV:-production}.conf
 ```
 
 This is similar to the shell syntax: if the environment variable is not defined, it will use the

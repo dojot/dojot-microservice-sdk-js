@@ -33,12 +33,11 @@ WORKDIR /opt/example
 
 RUN apk --no-cache add \
     libsasl \
-    lz4-libs \
-    curl
+    lz4-libs
 
 COPY --from=base /opt/example .
 
 CMD ["node", "app/index.js"]
 
-HEALTHCHECK --start-period=2m --interval=30s --timeout=10s --retries=3 \
-    CMD curl -f http://localhost:9000/health || exit 1
+HEALTHCHECK --start-period=30s --interval=30s --timeout=10s --retries=3 \
+    CMD wget http://localhost:9000/health -q -O - > /dev/null 2>&1

@@ -33,7 +33,8 @@ WORKDIR /opt/example
 
 RUN apk --no-cache add \
     libsasl \
-    lz4-libs
+    lz4-libs \
+    curl
 
 COPY --from=base /opt/example .
 

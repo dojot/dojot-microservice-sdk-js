@@ -1,6 +1,6 @@
 {
   "name": "@dojot/microservice-sdk",
-  "version": "0.1.12",
+  "version": "0.1.14",
   "description": "A SDK to help to build microservices for the dojot platform",
   "engines": {
     "node": ">=12.18.4",

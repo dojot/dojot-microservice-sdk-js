@@ -1,4 +1,4 @@
-FROM node:12.18.4-alpine AS base
+FROM node:12.20-alpine AS base
 
 WORKDIR /opt/example
 
@@ -24,7 +24,7 @@ COPY lib ./lib
 COPY index.js index.js
 COPY examples/consumer/sample.js ./app/sample.js
 
-FROM node:12.18.4-alpine
+FROM node:12.20-alpine
 
 WORKDIR /opt/example
 

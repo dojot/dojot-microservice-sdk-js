@@ -1,4 +1,4 @@
-FROM node:12.18.4-alpine AS base
+FROM node:12.22-alpine AS base
 
 WORKDIR /opt/example
 
@@ -27,7 +27,7 @@ COPY examples/serviceStateManager/package*.json ./
 
 RUN npm install
 
-FROM node:12.18.4-alpine
+FROM node:12.22-alpine
 
 WORKDIR /opt/example
 
@@ -39,5 +39,5 @@ COPY --from=base /opt/example .
 
 CMD ["node", "app/index.js"]
 
-HEALTHCHECK --start-period=2m --interval=30s --timeout=10s --retries=3 \
-    CMD curl -f http://localhost:9000/health || exit 1
+HEALTHCHECK --start-period=30s --interval=30s --timeout=10s --retries=3 \
+    CMD wget http://localhost:9000/health -q -O - > /dev/null 2>&1
